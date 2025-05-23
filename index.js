@@ -6,6 +6,35 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 const port = 3000;
 
+// Chatbot
+
+require("dotenv").config();
+const { ChatGoogleGenerativeAI } = require("@langchain/google-genai");
+
+const model = new ChatGoogleGenerativeAI({
+  model: "gemini-1.5-flash",
+  apiKey: process.env.GEMINI_API_KEY,
+});
+
+async function runChatbot(input) {
+  const messages = [
+    { role: "user", content: input }
+  ];
+  
+  const result = await model.invoke(messages);
+  console.log("Gemini Response:", result.content);
+  return result.content
+}
+
+app.post("/api/v1/chat", async (req, res) => {
+  const { message } = req.body;
+  const response = await runChatbot(message);
+  res.json({ reply: response });
+});
+
+// ============
+
+
 // Middlewares
 async function userAvailable(req, res, next) {
   const { username } = req.body;
