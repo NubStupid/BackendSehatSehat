@@ -23,16 +23,18 @@ User.init({
 
 class Program extends Model {}
 Program.init({
+  id:{type:DataTypes.STRING,primaryKey:true},
   program_name: DataTypes.STRING,
   pricing: DataTypes.FLOAT,
 }, { sequelize, modelName: 'Program', tableName: 'programs', timestamps: true, paranoid: true });
 
 class UserProgram extends Model {}
 UserProgram.init({
-  program_id: DataTypes.INTEGER,
+  id:{type:DataTypes.STRING,primaryKey:true},
+  program_id: DataTypes.STRING,
   username: DataTypes.STRING,
   expires_in: DataTypes.DATE,
-  chat_group_id: DataTypes.INTEGER,
+  chat_group_id: DataTypes.STRING,
 }, { sequelize, modelName: 'UserProgram', tableName: 'user_programs' });
 
 class ProgramProgress extends Model {}
@@ -44,7 +46,8 @@ ProgramProgress.init({
 }, { sequelize, modelName: 'ProgramProgress', tableName: 'program_progresses' });
 
 class Meal extends Model {}
-Meal.init({
+Meal.init({ 
+  id:{type:DataTypes.STRING,primaryKey:true},
   meal_name: DataTypes.STRING,
   ingredients: DataTypes.TEXT,
   instructions: DataTypes.TEXT,
@@ -57,6 +60,7 @@ Meal.init({
 
 class Plan extends Model {}
 Plan.init({
+  id:{type:DataTypes.STRING,primaryKey:true},
   plan_name: DataTypes.STRING,
   total_calories: DataTypes.FLOAT,
   total_estimated_price: DataTypes.FLOAT,
@@ -71,6 +75,7 @@ MealPlan.init({
 
 class Meetup extends Model {}
 Meetup.init({
+  id:{type:DataTypes.STRING,primaryKey:true},
   meetup_title: DataTypes.STRING,
   meetup_time: DataTypes.DATE,
   customer_username: DataTypes.STRING,
@@ -79,6 +84,7 @@ Meetup.init({
 
 class Workout extends Model {}
 Workout.init({
+  id:{type:DataTypes.STRING,primaryKey:true},
   workout_title: DataTypes.STRING,
   workout_list: DataTypes.TEXT,
   estimated_time: DataTypes.INTEGER,
@@ -88,18 +94,20 @@ Workout.init({
 
 class ChatGroup extends Model {}
 ChatGroup.init({
+  id:{type:DataTypes.STRING,primaryKey:true},
   chat_name: DataTypes.STRING,
 }, { sequelize, modelName: 'ChatGroup', tableName: 'chat_groups' });
 
 class UserChat extends Model {}
 UserChat.init({
   username: DataTypes.STRING,
-  chat_group_id: DataTypes.INTEGER,
+  chat_group_id: DataTypes.STRING,
 }, { sequelize, modelName: 'UserChat', tableName: 'user_chats' });
 
 class ChatLog extends Model {}
 ChatLog.init({
-  chat_group_id: DataTypes.INTEGER,
+  id:{type:DataTypes.STRING,primaryKey:true},
+  chat_group_id: DataTypes.STRING,
   username: DataTypes.STRING,
   content: DataTypes.TEXT,
 }, { sequelize, modelName: 'ChatLog', tableName: 'chat_logs', timestamps: true, paranoid: true });
