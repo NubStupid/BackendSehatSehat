@@ -25,10 +25,8 @@ function userRoleAuthentication(roles = []) {
   };
 }
 
-
 // Login
-
-app.post("/api/v1/login", [userAvailable], async (req, res) => {
+app.post("/login", [userAvailable], async (req, res) => {
   const { password } = req.body;
   if (req.user.password !== password) {
     return res.status(401).json({ error: "Invalid password" });
@@ -37,20 +35,27 @@ app.post("/api/v1/login", [userAvailable], async (req, res) => {
 });
 
 // Register
-
-app.post("/api/v1/register", async (req, res) => {
+app.post("/register", async (req, res) => {
   const { username, display_name, password, dob, pp_url } = req.body;
   try {
     const exists = await User.findOne({ where: { username } });
-    if (exists) return res.status(400).json({ error: "Username already taken" });
-    const user = await User.create({ username, display_name, password, dob, role:"customer", pp_url });
+    if (exists)
+      return res.status(400).json({ error: "Username already taken" });
+    const user = await User.create({
+      username,
+      display_name,
+      password,
+      dob,
+      role: "customer",
+      pp_url,
+    });
     res.status(201).json({ message: "User registered", user });
   } catch (err) {
-    res.status(500).json({ error: "Registration failed", details: err.message });
+    res
+      .status(500)
+      .json({ error: "Registration failed", details: err.message });
   }
 });
-
-
 
 app.listen(port, function () {
   console.log(`listening on port:${port}...`);
