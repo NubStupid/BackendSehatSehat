@@ -1,6 +1,6 @@
 const express = require("express");
-const { Op } = require("sequelize");
-const { User } = require("./db");
+const { Op, where } = require("sequelize");
+const { User, ChatLog } = require("./db");
 const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -26,13 +26,101 @@ async function runChatbot(input) {
   return result.content
 }
 
-app.post("/api/v1/chat", async (req, res) => {
+app.post("/api/v1/chatbot", async (req, res) => {
   const { message } = req.body;
   const response = await runChatbot(message);
-  res.json({ reply: response });
+  return res.json({ reply: response });
 });
 
 // ============
+
+// == Chat_LOG ==
+
+app.post("/api/v1/chat",async (req,res)=>{
+  const {content,username,chat_group} = req.body
+  const countID = (await ChatLog.findAll()).length
+  const newID = "CL"+(countID+1).toString().padStart(5,"0")
+
+  await ChatLog.create({
+    id:newID,
+    chat_group_id:chat_group,
+    username:username,
+    content:content
+  })
+
+  return res.status(200).json({
+    status:200,
+    message:"Chatlog successfully created!"
+  })
+})
+
+app.get("/api/v1/chat/:chat_group_id",async(req,res)=>{
+  const {chat_group_id} = req.params
+
+  const chats = await ChatLog.findAll({
+    chat_group_id:chat_group_id
+  })
+  return res.status(200).json({
+    status:200,
+    chats:chats
+  })
+})
+
+app.post("/api/v1/chat/sync", async (req,res)=>{
+  const {group_id, logs} = req.body
+  const all_logs = await ChatLog.findAll({
+    where:{
+      chat_group_id:group_id
+    }
+  })
+
+  const synced_logs = await Promise.all(all_logs.map(async (log)=>{
+    let contained = false
+    for(let l of logs){
+      if(l.id == log.dataValues.id){
+        contained = true
+        await ChatLog.update({
+          content:l.content
+        },{
+          where:{
+              id:l.id
+          }
+        })
+        return l
+      }
+    }
+
+    if(contained != true){
+      console.log(log.dataValues);
+      return log.dataValues
+    }
+  }))
+
+  const formatted_sync = synced_logs.map((l)=>{
+    if(l.deletedAt != null){
+      return {
+        ...l,
+        createdAt: new Date(l.createdAt).getTime(),
+        updatedAt: new Date(l.updatedAt).getTime(),
+        deletedAt: new Date(l.deletedAt).getTime(),
+      }
+    }else{
+      return {
+        ...l,
+        createdAt: new Date(l.createdAt).getTime(),
+        updatedAt: new Date(l.updatedAt).getTime(),
+      }
+    }
+  })
+
+  console.log(JSON.stringify(formatted_sync));
+  return res.status(200).json({
+    status:200,
+    chats:formatted_sync
+  })
+})
+
+// ==============
 
 
 // Middlewares
@@ -48,7 +136,7 @@ async function userAvailable(req, res, next) {
 function userRoleAuthentication(roles = []) {
   return (req, res, next) => {
     if (!roles.length || roles.includes(req.user.role)) {
-      return next();
+      return next(); 
     }
     return res.status(403).json({ error: "Unauthorized role" });
   };
