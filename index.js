@@ -18,18 +18,25 @@ const model = new ChatGoogleGenerativeAI({
 
 async function runChatbot(input) {
   const messages = [
-    { role: "user", content: input }
+    {
+      role: "system",
+      content: "You are a helpful and professional health and fitness assistant. Answer clearly and concisely in user's respective language. Avoid any other topics other than healthy diets and workout and health benefits!"
+    },
+    {
+      role: "user",
+      content: input
+    }
   ];
-  
+
   const result = await model.invoke(messages);
   console.log("Gemini Response:", result.content);
-  return result.content
+  return result.content;
 }
 
 app.post("/api/v1/chatbot", async (req, res) => {
   const { message } = req.body;
   const response = await runChatbot(message);
-  return res.json({ reply: response });
+  return res.json({ response: response });
 });
 
 // ============
@@ -37,6 +44,7 @@ app.post("/api/v1/chatbot", async (req, res) => {
 // == Chat_LOG ==
 
 app.post("/api/v1/chat",async (req,res)=>{
+
   const {content,username,chat_group} = req.body
   const countID = (await ChatLog.findAll()).length
   const newID = "CL"+(countID+1).toString().padStart(5,"0")
@@ -68,6 +76,8 @@ app.get("/api/v1/chat/:chat_group_id",async(req,res)=>{
 
 app.post("/api/v1/chat/sync", async (req,res)=>{
   const {group_id, logs} = req.body
+  console.log(logs);
+  
   const all_logs = await ChatLog.findAll({
     where:{
       chat_group_id:group_id

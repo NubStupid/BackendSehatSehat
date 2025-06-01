@@ -31,6 +31,7 @@ function generateId(prefix, index) {
     password: DB_PASS,
     host: DB_HOST,
   });
+  
   await conn.query(`drop database if exists ${DB_NAME}`);
   await conn.query(`create database ${DB_NAME}`);
   await sequelize.sync({ force: true });
