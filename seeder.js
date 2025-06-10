@@ -31,7 +31,7 @@ function generateId(prefix, index) {
     password: DB_PASS,
     host: DB_HOST,
   });
-  
+
   await conn.query(`drop database if exists ${DB_NAME}`);
   await conn.query(`create database ${DB_NAME}`);
   await sequelize.sync({ force: true });
@@ -46,21 +46,37 @@ function generateId(prefix, index) {
       pp_url: "",
     },
     {
-      username: "chef_jane",
-      display_name: "Chef Jane",
-      password: "cookwell",
+      username: "expert_budi",
+      display_name: "Expert Budi",
+      password: "expert123",
       dob: "1985-05-12",
-      role: "chef",
+      role: "expert",
       pp_url: "",
     },
     {
-      username: "mike_trainer",
-      display_name: "Mike Trainer",
+      username: "expert_maria",
+      display_name: "Expert Maria",
       password: "fitpass",
       dob: "1988-07-21",
-      role: "gym",
+      role: "expert",
       pp_url: "",
     },
+    // {
+    //   username: "chef_jane",
+    //   display_name: "Chef Jane",
+    //   password: "cookwell",
+    //   dob: "1985-05-12",
+    //   role: "chef",
+    //   pp_url: "",
+    // },
+    // {
+    //   username: "mike_trainer",
+    //   display_name: "Mike Trainer",
+    //   password: "fitpass",
+    //   dob: "1988-07-21",
+    //   role: "gym",
+    //   pp_url: "",
+    // },
     {
       username: "anna_admin",
       display_name: "Anna Admin",
@@ -195,35 +211,35 @@ function generateId(prefix, index) {
       meetup_title: "Initial Consultation",
       meetup_time: "2026-06-11 10:00:00",
       customer_username: "john_doe",
-      expert_username: "mike_trainer",
+      expert_username: "expert_maria",
     },
     {
       id: "MU00002",
       meetup_title: "Progress Review",
       meetup_time: "2026-06-12 14:00:00",
       customer_username: "john_doe",
-      expert_username: "mike_trainer",
+      expert_username: "expert_budi",
     },
     {
       id: "MU00003",
       meetup_title: "Nutrition Planning",
       meetup_time: "2026-06-13 09:00:00",
       customer_username: "sarah_customer",
-      expert_username: "chef_jane",
+      expert_username: "expert_maria",
     },
     {
       id: "MU00004",
       meetup_title: "Workout Assessment",
       meetup_time: "2026-06-14 16:00:00",
       customer_username: "john_doe",
-      expert_username: "mike_trainer",
+      expert_username: "expert_budi",
     },
     {
       id: "MU00005",
       meetup_title: "Weekly Check-in",
       meetup_time: "2026-06-15 11:00:00",
       customer_username: "sarah_customer",
-      expert_username: "mike_trainer",
+      expert_username: "expert_budi",
     },
   ]);
 
@@ -234,7 +250,7 @@ function generateId(prefix, index) {
       workout_list: "Running,Cycling,Jump Rope",
       estimated_time: 60,
       focused_at: "cardiovascular",
-      expert_username: "mike_trainer",
+      expert_username: "expert_budi",
     },
     {
       id: "WO00002",
@@ -242,7 +258,7 @@ function generateId(prefix, index) {
       workout_list: "Push-ups,Pull-ups,Bench Press,Shoulder Press",
       estimated_time: 45,
       focused_at: "upper body",
-      expert_username: "mike_trainer",
+      expert_username: "expert_maria",
     },
     {
       id: "WO00003",
@@ -250,7 +266,7 @@ function generateId(prefix, index) {
       workout_list: "Sun Salutation,Warrior Poses,Tree Pose",
       estimated_time: 45,
       focused_at: "flexibility",
-      expert_username: "mike_trainer",
+      expert_username: "expert_budi",
     },
     {
       id: "WO00004",
@@ -258,7 +274,7 @@ function generateId(prefix, index) {
       workout_list: "Burpees,Mountain Climbers,High Knees,Jumping Jacks",
       estimated_time: 30,
       focused_at: "full body",
-      expert_username: "mike_trainer",
+      expert_username: "expert_budi",
     },
     {
       id: "WO00005",
@@ -266,7 +282,7 @@ function generateId(prefix, index) {
       workout_list: "Squats,Deadlifts,Lunges,Planks",
       estimated_time: 50,
       focused_at: "strength",
-      expert_username: "mike_trainer",
+      expert_username: "expert_maria",
     },
     {
       id: "WO00006",
@@ -274,7 +290,7 @@ function generateId(prefix, index) {
       workout_list: "Core Exercises,Flexibility,Balance",
       estimated_time: 40,
       focused_at: "core",
-      expert_username: "mike_trainer",
+      expert_username: "expert_maria",
     },
     {
       id: "WO00007",
@@ -282,7 +298,7 @@ function generateId(prefix, index) {
       workout_list: "Olympic Lifts,Functional Movements,Cardio",
       estimated_time: 60,
       focused_at: "functional fitness",
-      expert_username: "mike_trainer",
+      expert_username: "expert_maria",
     },
     {
       id: "WO00008",
@@ -290,7 +306,7 @@ function generateId(prefix, index) {
       workout_list: "Freestyle,Backstroke,Breaststroke",
       estimated_time: 45,
       focused_at: "full body cardio",
-      expert_username: "mike_trainer",
+      expert_username: "expert_budi",
     },
   ]);
 
@@ -304,12 +320,12 @@ function generateId(prefix, index) {
 
   await UserChat.bulkCreate([
     { username: "john_doe", chat_group_id: "CG00001" },
-    { username: "chef_jane", chat_group_id: "CG00001" },
-    { username: "mike_trainer", chat_group_id: "CG00001" },
+    { username: "expert_maria", chat_group_id: "CG00001" },
+    { username: "expert_budi", chat_group_id: "CG00001" },
     { username: "john_doe", chat_group_id: "CG00002" },
-    { username: "mike_trainer", chat_group_id: "CG00002" },
+    { username: "expert_budi", chat_group_id: "CG00002" },
     { username: "sarah_customer", chat_group_id: "CG00003" },
-    { username: "chef_jane", chat_group_id: "CG00003" },
+    { username: "expert_maria", chat_group_id: "CG00003" },
     { username: "john_doe", chat_group_id: "CG00004" },
     { username: "sarah_customer", chat_group_id: "CG00005" },
   ]);
@@ -324,13 +340,13 @@ function generateId(prefix, index) {
     {
       id: "CL00002",
       chat_group_id: "CG00001",
-      username: "chef_jane",
+      username: "expert_budi",
       content: "Welcome, John! I'll help you with your nutrition plan.",
     },
     {
       id: "CL00003",
       chat_group_id: "CG00001",
-      username: "mike_trainer",
+      username: "expert_maria",
       content: "Great to have you here! Let's achieve your goals together.",
     },
     {
@@ -343,7 +359,8 @@ function generateId(prefix, index) {
       id: "CL00005",
       chat_group_id: "CG00004",
       username: "Chatbot",
-      content: "Great question! Starting a weight loss journey requires a combination of proper nutrition and regular exercise. I recommend beginning with a balanced diet rich in lean proteins, vegetables, and whole grains, combined with 30 minutes of moderate exercise 3-4 times per week. Would you like specific meal or workout suggestions?",
+      content:
+        "Great question! Starting a weight loss journey requires a combination of proper nutrition and regular exercise. I recommend beginning with a balanced diet rich in lean proteins, vegetables, and whole grains, combined with 30 minutes of moderate exercise 3-4 times per week. Would you like specific meal or workout suggestions?",
     },
   ]);
 
