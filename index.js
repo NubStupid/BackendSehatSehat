@@ -187,3 +187,183 @@ app.post("/register", async (req, res) => {
 app.listen(port, function () {
   console.log(`listening on port:${port}...`);
 });
+
+// Get Program 
+ app.get("/api/v1/user/:username/programs", async (req, res) => {
+  try {
+    const { username } = req.params;
+    
+    const userPrograms = await UserProgram.findAll({
+      where: { username },
+      include: [{
+        model: Program,
+        foreignKey: 'program_id',
+        targetKey: 'id'
+      }]
+    });
+
+    return res.status(200).json({
+      status: 200,
+      programs: userPrograms
+    });
+  } catch (error) {
+    return res.status(500).json({
+      status: 500,
+      message: "Failed to fetch user programs",
+      error: error.message
+    });
+  }
+});
+
+// Get user workouts/schedule
+app.get("/api/v1/user/:username/workouts", async (req, res) => {
+  try {
+    const { username } = req.params;
+    const { date } = req.query; // Optional date filter
+    
+    let whereClause = {};
+    if (date) {
+      const startDate = new Date(date + 'T00:00:00.000Z');
+      const endDate = new Date(date + 'T23:59:59.999Z');
+      whereClause.createdAt = {
+        [Op.between]: [startDate, endDate]
+      };
+    }
+
+    const workouts = await Workout.findAll({
+      where: whereClause,
+      order: [['createdAt', 'ASC']]
+    });
+
+    return res.status(200).json({
+      status: 200,
+      workouts: workouts
+    });
+  } catch (error) {
+    return res.status(500).json({
+      status: 500,
+      message: "Failed to fetch workouts",
+      error: error.message
+    });
+  }
+});
+
+// Get user meetups/schedule
+app.get("/api/v1/user/:username/meetups", async (req, res) => {
+  try {
+    const { username } = req.params;
+    const { date } = req.query; // Optional date filter
+    
+    let whereClause = {
+      customer_username: username
+    };
+    
+    if (date) {
+      const startDate = new Date(date + 'T00:00:00.000Z');
+      const endDate = new Date(date + 'T23:59:59.999Z');
+      whereClause.meetup_time = {
+        [Op.between]: [startDate, endDate]
+      };
+    }
+
+    const meetups = await Meetup.findAll({
+      where: whereClause,
+      order: [['meetup_time', 'ASC']]
+    });
+
+    return res.status(200).json({
+      status: 200,
+      meetups: meetups
+    });
+  } catch (error) {
+    return res.status(500).json({
+      status: 500,
+      message: "Failed to fetch meetups",
+      error: error.message
+    });
+  }
+});
+
+// Get user dashboard data (combined endpoint)
+app.get("/api/v1/user/:username/dashboard", async (req, res) => {
+  try {
+    const { username } = req.params;
+    
+    // Get user info
+    const user = await User.findOne({
+      where: { username },
+      attributes: ['username', 'display_name', 'role', 'pp_url']
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        status: 404,
+        message: "User not found"
+      });
+    }
+
+    // Get user programs with progress
+    const userPrograms = await UserProgram.findAll({
+      where: { username },
+      include: [{
+        model: Program,
+        foreignKey: 'program_id',
+        targetKey: 'id'
+      }]
+    });
+
+    // Get recent workouts
+    const recentWorkouts = await Workout.findAll({
+      limit: 10,
+      order: [['createdAt', 'DESC']]
+    });
+
+    // Get upcoming meetups
+    const upcomingMeetups = await Meetup.findAll({
+      where: {
+        customer_username: username,
+        meetup_time: {
+          [Op.gte]: new Date()
+        }
+      },
+      order: [['meetup_time', 'ASC']],
+      limit: 5
+    });
+
+    return res.status(200).json({
+      status: 200,
+      data: {
+        user: user,
+        programs: userPrograms,
+        workouts: recentWorkouts,
+        meetups: upcomingMeetups
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({
+      status: 500,
+      message: "Failed to fetch dashboard data",
+      error: error.message
+    });
+  }
+});
+
+// Get all programs (for program listing)
+app.get("/api/v1/programs", async (req, res) => {
+  try {
+    const programs = await Program.findAll({
+      order: [['createdAt', 'DESC']]
+    });
+
+    return res.status(200).json({
+      status: 200,
+      programs: programs
+    });
+  } catch (error) {
+    return res.status(500).json({
+      status: 500,
+      message: "Failed to fetch programs",
+      error: error.message
+    });
+  }
+});

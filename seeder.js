@@ -69,20 +69,48 @@ function generateId(prefix, index) {
       role: "admin",
       pp_url: "",
     },
+    {
+      username: "sarah_customer",
+      display_name: "Sarah Wilson",
+      password: "sarah123",
+      dob: "1992-08-15",
+      role: "customer",
+      pp_url: "",
+    },
   ]);
 
   const programs = await Program.bulkCreate([
-    { id: "PR00001", program_name: "Weight Loss", pricing: 100000 },
-    { id: "PR00002", program_name: "Muscle Gain", pricing: 150000 },
+    { id: "PR00001", program_name: "Slim Fit Project", pricing: 100000 },
+    { id: "PR00002", program_name: "Muscle Building Pro", pricing: 150000 },
+    { id: "PR00003", program_name: "Cardio Blast", pricing: 120000 },
+    { id: "PR00004", program_name: "Flexibility Master", pricing: 80000 },
+    { id: "PR00005", program_name: "Athletic Performance", pricing: 200000 },
+    { id: "PR00006", program_name: "Weight Loss Journey", pricing: 180000 },
+    { id: "PR00007", program_name: "Core Strength Plus", pricing: 90000 },
+    { id: "PR00008", program_name: "Beginner Fitness", pricing: 70000 },
   ]);
 
   await UserProgram.bulkCreate([
     {
       id: "UP00001",
       program_id: "PR00001",
-      username: "US00001",
-      expires_in: "2025-12-31",
+      username: "john_doe",
+      expires_in: "2026-12-31",
       chat_group_id: "CG00001",
+    },
+    {
+      id: "UP00002",
+      program_id: "PR00002",
+      username: "john_doe",
+      expires_in: "2026-04-15",
+      chat_group_id: "CG00002",
+    },
+    {
+      id: "UP00003",
+      program_id: "PR00003",
+      username: "sarah_customer",
+      expires_in: "2026-03-30",
+      chat_group_id: "CG00003",
     },
   ]);
 
@@ -93,14 +121,20 @@ function generateId(prefix, index) {
       progress_list: "PL00001,PL00002",
       progress_list_type: "meal",
     },
+    {
+      program_id: "PR00002",
+      progress_index: 1,
+      progress_list: "WO00001,WO00002",
+      progress_list_type: "workout",
+    },
   ]);
 
   const meals = await Meal.bulkCreate([
     {
       id: "ME00001",
       meal_name: "Grilled Chicken Salad",
-      ingredients: "chicken, lettuce, tomato",
-      instructions: "Grill chicken, mix with salad",
+      ingredients: "chicken, lettuce, tomato, cucumber, olive oil",
+      instructions: "Grill chicken breast, mix with fresh salad vegetables",
       calories: 250,
       fat: 10,
       protein: 30,
@@ -110,73 +144,209 @@ function generateId(prefix, index) {
     {
       id: "ME00002",
       meal_name: "Protein Shake",
-      ingredients: "milk, protein powder",
-      instructions: "Blend all",
+      ingredients: "milk, protein powder, banana",
+      instructions: "Blend all ingredients until smooth",
       calories: 150,
       fat: 5,
       protein: 25,
       estimated_price: 15000,
       estimated_time: 5,
     },
+    {
+      id: "ME00003",
+      meal_name: "Quinoa Bowl",
+      ingredients: "quinoa, vegetables, avocado, nuts",
+      instructions: "Cook quinoa, add fresh vegetables and toppings",
+      calories: 350,
+      fat: 15,
+      protein: 12,
+      estimated_price: 25000,
+      estimated_time: 15,
+    },
   ]);
 
   const plans = await Plan.bulkCreate([
     {
       id: "PL00001",
-      plan_name: "Day 1 Plan",
+      plan_name: "Day 1 Weight Loss Plan",
       total_calories: 400,
       total_estimated_price: 45000,
-      expert_username: "US00002",
+      expert_username: "chef_jane",
+    },
+    {
+      id: "PL00002",
+      plan_name: "Day 2 Muscle Gain Plan",
+      total_calories: 500,
+      total_estimated_price: 40000,
+      expert_username: "chef_jane",
     },
   ]);
 
   await MealPlan.bulkCreate([
     { plain_id: "PL00001", meal_id: "ME00001" },
     { plain_id: "PL00001", meal_id: "ME00002" },
+    { plain_id: "PL00002", meal_id: "ME00002" },
+    { plain_id: "PL00002", meal_id: "ME00003" },
   ]);
 
   await Meetup.bulkCreate([
     {
       id: "MU00001",
       meetup_title: "Initial Consultation",
-      meetup_time: "2025-06-01 10:00:00",
-      customer_username: "US00001",
-      expert_username: "US00003",
+      meetup_time: "2026-06-11 10:00:00",
+      customer_username: "john_doe",
+      expert_username: "mike_trainer",
+    },
+    {
+      id: "MU00002",
+      meetup_title: "Progress Review",
+      meetup_time: "2026-06-12 14:00:00",
+      customer_username: "john_doe",
+      expert_username: "mike_trainer",
+    },
+    {
+      id: "MU00003",
+      meetup_title: "Nutrition Planning",
+      meetup_time: "2026-06-13 09:00:00",
+      customer_username: "sarah_customer",
+      expert_username: "chef_jane",
+    },
+    {
+      id: "MU00004",
+      meetup_title: "Workout Assessment",
+      meetup_time: "2026-06-14 16:00:00",
+      customer_username: "john_doe",
+      expert_username: "mike_trainer",
+    },
+    {
+      id: "MU00005",
+      meetup_title: "Weekly Check-in",
+      meetup_time: "2026-06-15 11:00:00",
+      customer_username: "sarah_customer",
+      expert_username: "mike_trainer",
     },
   ]);
 
   await Workout.bulkCreate([
     {
       id: "WO00001",
-      workout_title: "Beginner Workout",
-      workout_list: "Pushups,Squats",
-      estimated_time: 30,
+      workout_title: "Cardio Morning",
+      workout_list: "Running,Cycling,Jump Rope",
+      estimated_time: 60,
+      focused_at: "cardiovascular",
+      expert_username: "mike_trainer",
+    },
+    {
+      id: "WO00002",
+      workout_title: "Upper Body Ignite",
+      workout_list: "Push-ups,Pull-ups,Bench Press,Shoulder Press",
+      estimated_time: 45,
       focused_at: "upper body",
-      expert_username: "US00003",
+      expert_username: "mike_trainer",
+    },
+    {
+      id: "WO00003",
+      workout_title: "Yoga Flow",
+      workout_list: "Sun Salutation,Warrior Poses,Tree Pose",
+      estimated_time: 45,
+      focused_at: "flexibility",
+      expert_username: "mike_trainer",
+    },
+    {
+      id: "WO00004",
+      workout_title: "HIIT Training",
+      workout_list: "Burpees,Mountain Climbers,High Knees,Jumping Jacks",
+      estimated_time: 30,
+      focused_at: "full body",
+      expert_username: "mike_trainer",
+    },
+    {
+      id: "WO00005",
+      workout_title: "Strength Training",
+      workout_list: "Squats,Deadlifts,Lunges,Planks",
+      estimated_time: 50,
+      focused_at: "strength",
+      expert_username: "mike_trainer",
+    },
+    {
+      id: "WO00006",
+      workout_title: "Pilates",
+      workout_list: "Core Exercises,Flexibility,Balance",
+      estimated_time: 40,
+      focused_at: "core",
+      expert_username: "mike_trainer",
+    },
+    {
+      id: "WO00007",
+      workout_title: "CrossFit",
+      workout_list: "Olympic Lifts,Functional Movements,Cardio",
+      estimated_time: 60,
+      focused_at: "functional fitness",
+      expert_username: "mike_trainer",
+    },
+    {
+      id: "WO00008",
+      workout_title: "Swimming",
+      workout_list: "Freestyle,Backstroke,Breaststroke",
+      estimated_time: 45,
+      focused_at: "full body cardio",
+      expert_username: "mike_trainer",
     },
   ]);
 
-  await ChatGroup.create({ id: "CG00001", chat_name: "Weight Loss Group" });
+  await ChatGroup.bulkCreate([
+    { id: "CG00001", chat_name: "Slim Fit Project Group" },
+    { id: "CG00002", chat_name: "Muscle Building Group" },
+    { id: "CG00003", chat_name: "Cardio Blast Group" },
+    { id: "CG00004", chat_name: "Chatbot Group - john_doe" },
+    { id: "CG00005", chat_name: "Chatbot Group - sarah_customer" },
+  ]);
 
   await UserChat.bulkCreate([
-    { username: "US00001", chat_group_id: "CG00001" },
-    { username: "US00002", chat_group_id: "CG00001" },
+    { username: "john_doe", chat_group_id: "CG00001" },
+    { username: "chef_jane", chat_group_id: "CG00001" },
+    { username: "mike_trainer", chat_group_id: "CG00001" },
+    { username: "john_doe", chat_group_id: "CG00002" },
+    { username: "mike_trainer", chat_group_id: "CG00002" },
+    { username: "sarah_customer", chat_group_id: "CG00003" },
+    { username: "chef_jane", chat_group_id: "CG00003" },
+    { username: "john_doe", chat_group_id: "CG00004" },
+    { username: "sarah_customer", chat_group_id: "CG00005" },
   ]);
 
   await ChatLog.bulkCreate([
     {
       id: "CL00001",
       chat_group_id: "CG00001",
-      username: "US00001",
-      content: "Hi! I'm excited to start!",
+      username: "john_doe",
+      content: "Hi! I'm excited to start my fitness journey!",
     },
     {
       id: "CL00002",
       chat_group_id: "CG00001",
-      username: "US00002",
-      content: "Welcome, John! Let's do this!",
+      username: "chef_jane",
+      content: "Welcome, John! I'll help you with your nutrition plan.",
+    },
+    {
+      id: "CL00003",
+      chat_group_id: "CG00001",
+      username: "mike_trainer",
+      content: "Great to have you here! Let's achieve your goals together.",
+    },
+    {
+      id: "CL00004",
+      chat_group_id: "CG00004",
+      username: "john_doe",
+      content: "What's the best way to start my weight loss journey?",
+    },
+    {
+      id: "CL00005",
+      chat_group_id: "CG00004",
+      username: "Chatbot",
+      content: "Great question! Starting a weight loss journey requires a combination of proper nutrition and regular exercise. I recommend beginning with a balanced diet rich in lean proteins, vegetables, and whole grains, combined with 30 minutes of moderate exercise 3-4 times per week. Would you like specific meal or workout suggestions?",
     },
   ]);
 
+  console.log("Database seeded successfully!");
   process.exit(0);
 })();
