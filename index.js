@@ -1,6 +1,6 @@
 const express = require("express");
 const { Op, where } = require("sequelize");
-const { User, ChatLog } = require("./db");
+const { Program, User, ChatLog } = require("./db");
 const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -20,12 +20,13 @@ async function runChatbot(input) {
   const messages = [
     {
       role: "system",
-      content: "You are a helpful and professional health and fitness assistant. Answer clearly and concisely in user's respective language. Avoid any other topics other than healthy diets and workout and health benefits!"
+      content:
+        "You are a helpful and professional health and fitness assistant. Answer clearly and concisely in user's respective language. Avoid any other topics other than healthy diets and workout and health benefits!",
     },
     {
       role: "user",
-      content: input
-    }
+      content: input,
+    },
   ];
 
   const result = await model.invoke(messages);
@@ -43,99 +44,102 @@ app.post("/api/v1/chatbot", async (req, res) => {
 
 // == Chat_LOG ==
 
-app.post("/api/v1/chat",async (req,res)=>{
-
-  const {content,username,chat_group} = req.body
-  const countID = (await ChatLog.findAll()).length
-  const newID = "CL"+(countID+1).toString().padStart(5,"0")
+app.post("/api/v1/chat", async (req, res) => {
+  const { content, username, chat_group } = req.body;
+  const countID = (await ChatLog.findAll()).length;
+  const newID = "CL" + (countID + 1).toString().padStart(5, "0");
 
   await ChatLog.create({
-    id:newID,
-    chat_group_id:chat_group,
-    username:username,
-    content:content
-  })
+    id: newID,
+    chat_group_id: chat_group,
+    username: username,
+    content: content,
+  });
 
   return res.status(200).json({
-    status:200,
-    message:"Chatlog successfully created!"
-  })
-})
+    status: 200,
+    message: "Chatlog successfully created!",
+  });
+});
 
-app.get("/api/v1/chat/:chat_group_id",async(req,res)=>{
-  const {chat_group_id} = req.params
+app.get("/api/v1/chat/:chat_group_id", async (req, res) => {
+  const { chat_group_id } = req.params;
 
   const chats = await ChatLog.findAll({
-    chat_group_id:chat_group_id
-  })
+    chat_group_id: chat_group_id,
+  });
   return res.status(200).json({
-    status:200,
-    chats:chats
-  })
-})
+    status: 200,
+    chats: chats,
+  });
+});
 
-app.post("/api/v1/chat/sync", async (req,res)=>{
-  const {group_id, logs} = req.body
+app.post("/api/v1/chat/sync", async (req, res) => {
+  const { group_id, logs } = req.body;
   console.log(logs);
-  
+
   const all_logs = await ChatLog.findAll({
-    where:{
-      chat_group_id:group_id
-    }
-  })
+    where: {
+      chat_group_id: group_id,
+    },
+  });
 
-  const synced_logs = await Promise.all(all_logs.map(async (log)=>{
-    let contained = false
-    for(let l of logs){
-      if(l.id == log.dataValues.id){
-        contained = true
-        await ChatLog.update({
-          content:l.content
-        },{
-          where:{
-              id:l.id
-          }
-        })
-        return l
+  const synced_logs = await Promise.all(
+    all_logs.map(async (log) => {
+      let contained = false;
+      for (let l of logs) {
+        if (l.id == log.dataValues.id) {
+          contained = true;
+          await ChatLog.update(
+            {
+              content: l.content,
+            },
+            {
+              where: {
+                id: l.id,
+              },
+            }
+          );
+          return l;
+        }
       }
-    }
 
-    if(contained != true){
-      console.log(log.dataValues);
-      return log.dataValues
-    }
-  }))
+      if (contained != true) {
+        console.log(log.dataValues);
+        return log.dataValues;
+      }
+    })
+  );
 
-  const formatted_sync = synced_logs.map((l)=>{
-    if(l.deletedAt != null){
+  const formatted_sync = synced_logs.map((l) => {
+    if (l.deletedAt != null) {
       return {
         ...l,
         createdAt: new Date(l.createdAt).getTime(),
         updatedAt: new Date(l.updatedAt).getTime(),
         deletedAt: new Date(l.deletedAt).getTime(),
-      }
-    }else{
+      };
+    } else {
       return {
         ...l,
         createdAt: new Date(l.createdAt).getTime(),
         updatedAt: new Date(l.updatedAt).getTime(),
-      }
+      };
     }
-  })
+  });
 
   console.log(JSON.stringify(formatted_sync));
   return res.status(200).json({
-    status:200,
-    chats:formatted_sync
-  })
-})
+    status: 200,
+    chats: formatted_sync,
+  });
+});
 
 // ==============
 
-
 // Middlewares
 async function userAvailable(req, res, next) {
-  const { username } = req.body;
+  const { username } = req.body || req.params;
   const user = await User.findOne({ where: { username } });
   if (!user) {
     return res.status(404).json({ error: "User not found" });
@@ -146,14 +150,14 @@ async function userAvailable(req, res, next) {
 function userRoleAuthentication(roles = []) {
   return (req, res, next) => {
     if (!roles.length || roles.includes(req.user.role)) {
-      return next(); 
+      return next();
     }
     return res.status(403).json({ error: "Unauthorized role" });
   };
 }
 
 // Login
-app.post("/login", [userAvailable], async (req, res) => {
+app.post("/api/v1/login", [userAvailable], async (req, res) => {
   const { password } = req.body;
   if (req.user.password !== password) {
     return res.status(401).json({ error: "Invalid password" });
@@ -162,7 +166,7 @@ app.post("/login", [userAvailable], async (req, res) => {
 });
 
 // Register
-app.post("/register", async (req, res) => {
+app.post("/api/v1/register", async (req, res) => {
   const { username, display_name, password, dob, pp_url } = req.body;
   try {
     const exists = await User.findOne({ where: { username } });
@@ -188,29 +192,31 @@ app.listen(port, function () {
   console.log(`listening on port:${port}...`);
 });
 
-// Get Program 
- app.get("/api/v1/user/:username/programs", async (req, res) => {
+// Get Program
+app.get("/api/v1/user/:username/programs", async (req, res) => {
   try {
     const { username } = req.params;
-    
+
     const userPrograms = await UserProgram.findAll({
       where: { username },
-      include: [{
-        model: Program,
-        foreignKey: 'program_id',
-        targetKey: 'id'
-      }]
+      include: [
+        {
+          model: Program,
+          foreignKey: "program_id",
+          targetKey: "id",
+        },
+      ],
     });
 
     return res.status(200).json({
       status: 200,
-      programs: userPrograms
+      programs: userPrograms,
     });
   } catch (error) {
     return res.status(500).json({
       status: 500,
       message: "Failed to fetch user programs",
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -220,30 +226,30 @@ app.get("/api/v1/user/:username/workouts", async (req, res) => {
   try {
     const { username } = req.params;
     const { date } = req.query; // Optional date filter
-    
+
     let whereClause = {};
     if (date) {
-      const startDate = new Date(date + 'T00:00:00.000Z');
-      const endDate = new Date(date + 'T23:59:59.999Z');
+      const startDate = new Date(date + "T00:00:00.000Z");
+      const endDate = new Date(date + "T23:59:59.999Z");
       whereClause.createdAt = {
-        [Op.between]: [startDate, endDate]
+        [Op.between]: [startDate, endDate],
       };
     }
 
     const workouts = await Workout.findAll({
       where: whereClause,
-      order: [['createdAt', 'ASC']]
+      order: [["createdAt", "ASC"]],
     });
 
     return res.status(200).json({
       status: 200,
-      workouts: workouts
+      workouts: workouts,
     });
   } catch (error) {
     return res.status(500).json({
       status: 500,
       message: "Failed to fetch workouts",
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -253,33 +259,33 @@ app.get("/api/v1/user/:username/meetups", async (req, res) => {
   try {
     const { username } = req.params;
     const { date } = req.query; // Optional date filter
-    
+
     let whereClause = {
-      customer_username: username
+      customer_username: username,
     };
-    
+
     if (date) {
-      const startDate = new Date(date + 'T00:00:00.000Z');
-      const endDate = new Date(date + 'T23:59:59.999Z');
+      const startDate = new Date(date + "T00:00:00.000Z");
+      const endDate = new Date(date + "T23:59:59.999Z");
       whereClause.meetup_time = {
-        [Op.between]: [startDate, endDate]
+        [Op.between]: [startDate, endDate],
       };
     }
 
     const meetups = await Meetup.findAll({
       where: whereClause,
-      order: [['meetup_time', 'ASC']]
+      order: [["meetup_time", "ASC"]],
     });
 
     return res.status(200).json({
       status: 200,
-      meetups: meetups
+      meetups: meetups,
     });
   } catch (error) {
     return res.status(500).json({
       status: 500,
       message: "Failed to fetch meetups",
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -288,34 +294,36 @@ app.get("/api/v1/user/:username/meetups", async (req, res) => {
 app.get("/api/v1/user/:username/dashboard", async (req, res) => {
   try {
     const { username } = req.params;
-    
+
     // Get user info
     const user = await User.findOne({
       where: { username },
-      attributes: ['username', 'display_name', 'role', 'pp_url']
+      attributes: ["username", "display_name", "role", "pp_url"],
     });
 
     if (!user) {
       return res.status(404).json({
         status: 404,
-        message: "User not found"
+        message: "User not found",
       });
     }
 
     // Get user programs with progress
     const userPrograms = await UserProgram.findAll({
       where: { username },
-      include: [{
-        model: Program,
-        foreignKey: 'program_id',
-        targetKey: 'id'
-      }]
+      include: [
+        {
+          model: Program,
+          foreignKey: "program_id",
+          targetKey: "id",
+        },
+      ],
     });
 
     // Get recent workouts
     const recentWorkouts = await Workout.findAll({
       limit: 10,
-      order: [['createdAt', 'DESC']]
+      order: [["createdAt", "DESC"]],
     });
 
     // Get upcoming meetups
@@ -323,11 +331,11 @@ app.get("/api/v1/user/:username/dashboard", async (req, res) => {
       where: {
         customer_username: username,
         meetup_time: {
-          [Op.gte]: new Date()
-        }
+          [Op.gte]: new Date(),
+        },
       },
-      order: [['meetup_time', 'ASC']],
-      limit: 5
+      order: [["meetup_time", "ASC"]],
+      limit: 5,
     });
 
     return res.status(200).json({
@@ -336,14 +344,14 @@ app.get("/api/v1/user/:username/dashboard", async (req, res) => {
         user: user,
         programs: userPrograms,
         workouts: recentWorkouts,
-        meetups: upcomingMeetups
-      }
+        meetups: upcomingMeetups,
+      },
     });
   } catch (error) {
     return res.status(500).json({
       status: 500,
       message: "Failed to fetch dashboard data",
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -351,19 +359,182 @@ app.get("/api/v1/user/:username/dashboard", async (req, res) => {
 // Get all programs (for program listing)
 app.get("/api/v1/programs", async (req, res) => {
   try {
-    const programs = await Program.findAll({
-      order: [['createdAt', 'DESC']]
+    const programs = await Program.findAll();
+
+    const transformedPrograms = programs.map((p) => {
+      // ambil semua field selain `deletedAt`
+      const { deletedAt, ...rest } = p.toJSON();
+      return {
+        ...rest,
+        createdAt: new Date(rest.createdAt).getTime(),
+        updatedAt: new Date(rest.updatedAt).getTime(),
+        // jangan sertakan deletedAt sama sekali
+      };
     });
 
     return res.status(200).json({
       status: 200,
-      programs: programs
+      programs: transformedPrograms,
     });
   } catch (error) {
+    console.error("Error fetching programs:", error);
     return res.status(500).json({
       status: 500,
       message: "Failed to fetch programs",
-      error: error.message
+      error: error.message,
     });
   }
 });
+
+// GET program by ID
+app.get("/api/v1/programs/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const program = await Program.findOne({
+      where: {
+        id: id,
+        deletedAt: null,
+      },
+    });
+    if (!program) {
+      return res.status(404).json({ status: 404, error: "Program not found" });
+    }
+    return res.status(200).json({
+      status: 200,
+      program: program,
+    });
+  } catch (err) {
+    return res.status(500).json({ status: 500, error: err.message });
+  }
+});
+
+// POST create program
+app.post("/api/v1/programs", async (req, res) => {
+  const { program_name, pricing } = req.body;
+  try {
+    // Hitung ID baru
+    const countID = (await Program.findAll()).length;
+    const newID = "P" + (countID + 1).toString().padStart(3, "0");
+
+    const newProgram = await Program.create({
+      id: newID,
+      program_name: program_name,
+      pricing: parseFloat(pricing),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      deletedAt: null,
+    });
+
+    return res.status(201).json({
+      status: 201,
+      message: "Program created",
+      program: newProgram,
+    });
+  } catch (err) {
+    return res.status(500).json({ status: 500, error: err.message });
+  }
+});
+
+// PUT update program
+app.put("/api/v1/programs/:id", async (req, res) => {
+  const { id } = req.params;
+  const { program_name, pricing } = req.body;
+  try {
+    const program = await Program.findOne({
+      where: { id: id, deletedAt: null },
+    });
+    if (!program) {
+      return res.status(404).json({ status: 404, error: "Program not found" });
+    }
+
+    program.program_name = program_name;
+    program.pricing = parseFloat(pricing);
+    program.updatedAt = new Date();
+    await program.save();
+
+    return res.status(200).json({
+      status: 200,
+      message: "Program updated",
+      program: program,
+    });
+  } catch (err) {
+    return res.status(500).json({ status: 500, error: err.message });
+  }
+});
+
+// DELETE (soft delete) program
+app.delete("/api/v1/programs/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const program = await Program.findOne({
+      where: { id: id, deletedAt: null },
+    });
+    if (!program) {
+      return res.status(404).json({ status: 404, error: "Program not found" });
+    }
+
+    program.deletedAt = new Date();
+    await program.save();
+
+    return res.status(200).json({
+      status: 200,
+      message: "Program deleted (soft)",
+    });
+  } catch (err) {
+    return res.status(500).json({ status: 500, error: err.message });
+  }
+});
+
+// GET all users (untuk admin)
+app.get("/api/v1/users", async (req, res) => {
+  try {
+    const users = await User.findAll({
+      order: [["createdAt", "DESC"]],
+    });
+
+    const transformedUsers = users.map((user) => ({
+      ...user.toJSON(),
+      createdAt: new Date(user.createdAt).getTime(),
+      updatedAt: new Date(user.updatedAt).getTime(),
+    }));
+
+    return res.status(200).json({
+      status: 200,
+      users: transformedUsers,
+    });
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    return res.status(500).json({
+      status: 500,
+      message: "Failed to fetch users",
+      error: error.message,
+    });
+  }
+});
+
+// DELETE user by username (permanent delete)
+app.delete(
+  "/api/v1/users/:username",
+  // Optional: cek apakah user ada dan role admin
+  userAvailable,
+  async (req, res) => {
+    const { username } = req.params;
+    try {
+      // Hapus baris di table User
+      const deletedCount = await User.destroy({
+        where: { username },
+      });
+
+      if (deletedCount === 0) {
+        return res.status(404).json({ status: 404, error: "User not found" });
+      }
+
+      return res
+        .status(200)
+        .json({ status: 200, message: "User deleted successfully" });
+    } catch (err) {
+      console.error("Error deleting user:", err);
+      return res.status(500).json({ status: 500, error: err.message });
+    }
+  }
+);
