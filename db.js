@@ -21,6 +21,7 @@ User.init({
   dob: { type: DataTypes.DATEONLY, allowNull: true },
   role: { type: DataTypes.STRING, allowNull: false },
   pp_url: { type: DataTypes.TEXT, allowNull: true },
+  balance: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
 }, { sequelize, modelName: 'User', tableName: 'users', timestamps: true, paranoid: true });
 
 // Program

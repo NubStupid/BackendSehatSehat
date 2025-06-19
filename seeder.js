@@ -44,6 +44,7 @@ function generateId(prefix, index) {
       dob: "1990-01-01",
       role: "customer",
       pp_url: "",
+      topup: 150000,
     },
     {
       username: "expert_budi",
@@ -52,6 +53,7 @@ function generateId(prefix, index) {
       dob: "1985-05-12",
       role: "expert",
       pp_url: "",
+      topup: 0,
     },
     {
       username: "expert_maria",
@@ -60,7 +62,28 @@ function generateId(prefix, index) {
       dob: "1988-07-21",
       role: "expert",
       pp_url: "",
+      topup: 0,
     },
+    {
+      username: "anna_admin",
+      display_name: "Anna Admin",
+      password: "admin123",
+      dob: "1980-03-10",
+      role: "admin",
+      pp_url: "",
+      topup: 0,
+    },
+    {
+      username: "sarah_customer",
+      display_name: "Sarah Wilson",
+      password: "sarah123",
+      dob: "1992-08-15",
+      role: "customer",
+      pp_url: "",
+      topup: 100000,
+    },
+  ]);
+
     // {
     //   username: "chef_jane",
     //   display_name: "Chef Jane",
@@ -77,23 +100,6 @@ function generateId(prefix, index) {
     //   role: "gym",
     //   pp_url: "",
     // },
-    {
-      username: "anna_admin",
-      display_name: "Anna Admin",
-      password: "admin123",
-      dob: "1980-03-10",
-      role: "admin",
-      pp_url: "",
-    },
-    {
-      username: "sarah_customer",
-      display_name: "Sarah Wilson",
-      password: "sarah123",
-      dob: "1992-08-15",
-      role: "customer",
-      pp_url: "",
-    },
-  ]);
 
   const programs = await Program.bulkCreate([
     { id: "PR00001", program_name: "Slim Fit Project", pricing: 100000 },
