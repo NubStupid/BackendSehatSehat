@@ -1,6 +1,6 @@
 const express = require("express");
 const { Op, where } = require("sequelize");
-const { Program, User, ChatLog } = require("./db");
+const { Program, User, ChatLog, ProgramProgress } = require("./db");
 const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -73,6 +73,84 @@ app.get("/api/v1/chat/:chat_group_id", async (req, res) => {
     chats: chats,
   });
 });
+
+
+app.post("/api/v1/users/sync", async (req,res) => {
+  const users = await User.findAll()
+  const users_sync = users.map((l) => {
+    if (l.deletedAt != null) {
+      return {
+        ...l.dataValues,
+        createdAt: new Date(l.createdAt).getTime(),
+        updatedAt: new Date(l.updatedAt).getTime(),
+        deletedAt: new Date(l.deletedAt).getTime(),
+      };
+    } else {
+      return {
+        ...l.dataValues,
+        createdAt: new Date(l.createdAt).getTime(),
+        updatedAt: new Date(l.updatedAt).getTime(),
+      };
+    }
+  });
+  return res.status(200).json({
+    status:200,
+    users: users_sync
+  })
+})
+
+app.post("/api/v1/programs/sync", async (req,res)=>{
+  const programs = await Program.findAll()
+  const program_sync =programs.map((l) => {
+    if (l.deletedAt != null) {
+      return {
+        ...l.dataValues,
+        createdAt: new Date(l.createdAt).getTime(),
+        updatedAt: new Date(l.updatedAt).getTime(),
+        deletedAt: new Date(l.deletedAt).getTime(),
+      };
+    } else {
+      return {
+        ...l.dataValues,
+        createdAt: new Date(l.createdAt).getTime(),
+        updatedAt: new Date(l.updatedAt).getTime(),
+      };
+    }
+  });
+  console.log(program_sync);
+  
+  return res.status(200).json({
+    status:200,
+    programs:program_sync
+  })
+})
+
+app.post("/api/v1/programs/progress/sync", async (req,res)=>{
+  const programs = await ProgramProgress.findAll()
+  const program_sync =programs.map((l) => {
+    if (l.deletedAt != null) {
+      return {
+        ...l.dataValues,
+        createdAt: new Date(l.createdAt).getTime(),
+        updatedAt: new Date(l.updatedAt).getTime(),
+        deletedAt: new Date(l.deletedAt).getTime(),
+      };
+    } else {
+      return {
+        ...l.dataValues,
+        createdAt: new Date(l.createdAt).getTime(),
+        updatedAt: new Date(l.updatedAt).getTime(),
+      };
+    }
+  });
+  console.log(program_sync);
+  
+  return res.status(200).json({
+    status:200,
+    progress:program_sync
+  })
+})
+
 
 app.post("/api/v1/chat/sync", async (req, res) => {
   const { group_id, logs } = req.body;
