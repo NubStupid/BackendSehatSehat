@@ -1,4 +1,3 @@
-// seeder.js
 const {
   sequelize,
   DB_NAME,
@@ -32,11 +31,25 @@ function generateId(prefix, index) {
     host: DB_HOST,
   });
 
+  // Drop and recreate the database
   await conn.query(`drop database if exists ${DB_NAME}`);
   await conn.query(`create database ${DB_NAME}`);
   await sequelize.sync({ force: true });
 
+<<<<<<< Updated upstream
   // 1. Seed Users first (independent table)
+=======
+  // Create ChatGroups first (this is important for foreign key constraints)
+  await ChatGroup.bulkCreate([
+    { id: "CG00001", chat_name: "Slim Fit Project Group" },
+    { id: "CG00002", chat_name: "Muscle Building Group" },
+    { id: "CG00003", chat_name: "Cardio Blast Group" },
+    { id: "CG00004", chat_name: "Chatbot Group - john_doe" },
+    { id: "CG00005", chat_name: "Chatbot Group - sarah_customer" },
+  ]);
+
+  // Create Users
+>>>>>>> Stashed changes
   await User.bulkCreate([
     {
       username: "john_doe",
@@ -45,7 +58,7 @@ function generateId(prefix, index) {
       dob: "1990-01-01",
       role: "customer",
       pp_url: "",
-      topup: 150000,
+      balance: 150000,
     },
     {
       username: "expert_budi",
@@ -54,7 +67,7 @@ function generateId(prefix, index) {
       dob: "1985-05-12",
       role: "expert",
       pp_url: "",
-      topup: 0,
+      balance: 0,
     },
     {
       username: "expert_maria",
@@ -63,7 +76,7 @@ function generateId(prefix, index) {
       dob: "1988-07-21",
       role: "expert",
       pp_url: "",
-      topup: 0,
+      balance: 0,
     },
     {
       username: "anna_admin",
@@ -72,7 +85,7 @@ function generateId(prefix, index) {
       dob: "1980-03-10",
       role: "admin",
       pp_url: "",
-      topup: 0,
+      balance: 0,
     },
     {
       username: "sarah_customer",
@@ -81,6 +94,7 @@ function generateId(prefix, index) {
       dob: "1992-08-15",
       role: "customer",
       pp_url: "",
+<<<<<<< Updated upstream
     },
     {
       username: "chef_jane",
@@ -113,6 +127,13 @@ function generateId(prefix, index) {
     // },
 
   // 2. Seed Programs (independent table)
+=======
+      balance: 100000,
+    },
+  ]);
+
+  // Create Programs
+>>>>>>> Stashed changes
   const programs = await Program.bulkCreate([
     { id: "PR00001", program_name: "Slim Fit Project", pricing: 100000 },
     { id: "PR00002", program_name: "Muscle Building Pro", pricing: 150000 },
@@ -124,7 +145,54 @@ function generateId(prefix, index) {
     { id: "PR00008", program_name: "Beginner Fitness", pricing: 70000 },
   ]);
 
+<<<<<<< Updated upstream
   // 3. Seed Meals (depends on Programs)
+=======
+  // Create UserPrograms
+  await UserProgram.bulkCreate([
+    {
+      id: "UP00001",
+      program_id: "PR00001",
+      username: "john_doe",
+      expires_in: "2026-12-31",
+      chat_group_id: "CG00001",
+    },
+    {
+      id: "UP00002",
+      program_id: "PR00002",
+      username: "john_doe",
+      expires_in: "2026-04-15",
+      chat_group_id: "CG00002",
+    },
+    {
+      id: "UP00003",
+      program_id: "PR00003",
+      username: "sarah_customer",
+      expires_in: "2026-03-30",
+      chat_group_id: "CG00003",
+    },
+  ]);
+
+  // Create ProgramProgress
+  await ProgramProgress.bulkCreate([
+    {
+      id: "PP00001",
+      program_id: "PR00001",
+      progress_index: 1,
+      progress_list: "PL00001,PL00002",
+      progress_list_type: "meal",
+    },
+    {
+      id: "PP00002",
+      program_id: "PR00002",
+      progress_index: 1,
+      progress_list: "WO00001,WO00002",
+      progress_list_type: "workout",
+    },
+  ]);
+
+  // Create Meals
+>>>>>>> Stashed changes
   const meals = await Meal.bulkCreate([
     {
       id: "ME00001",
@@ -189,25 +257,33 @@ function generateId(prefix, index) {
     },
   ]);
 
+<<<<<<< Updated upstream
   // 4. Seed Plans (depends on Users - expert_username)
+=======
+  // Create Plans
+>>>>>>> Stashed changes
   const plans = await Plan.bulkCreate([
     {
       id: "PL00001",
       plan_name: "Day 1 Weight Loss Plan",
       total_calories: 400,
       total_estimated_price: 45000,
-      expert_username: "chef_jane",
+      expert_username: "anna_admin",
     },
     {
       id: "PL00002",
       plan_name: "Day 2 Muscle Gain Plan",
       total_calories: 500,
       total_estimated_price: 40000,
-      expert_username: "chef_jane",
+      expert_username: "anna_admin",
     },
   ]);
 
+<<<<<<< Updated upstream
   // 5. Seed MealPlan (depends on Plans and Meals)
+=======
+  // Create MealPlans
+>>>>>>> Stashed changes
   await MealPlan.bulkCreate([
     { plain_id: "PL00001", meal_id: "ME00001" },
     { plain_id: "PL00001", meal_id: "ME00004" },
@@ -215,6 +291,7 @@ function generateId(prefix, index) {
     { plain_id: "PL00002", meal_id: "ME00005" },
   ]);
 
+<<<<<<< Updated upstream
   // 6. Seed Workouts (depends on Users and Programs)
   await Workout.bulkCreate([
     {
@@ -390,6 +467,9 @@ function generateId(prefix, index) {
   ]);
 
   // 11. Seed Meetup (depends on Users)
+=======
+  // Create Meetups
+>>>>>>> Stashed changes
   await Meetup.bulkCreate([
     {
       id: "MU00001",
@@ -405,31 +485,15 @@ function generateId(prefix, index) {
       customer_username: "john_doe",
       expert_username: "expert_budi",
     },
-    {
-      id: "MU00003",
-      meetup_title: "Nutrition Planning",
-      meetup_time: "2026-06-13 09:00:00",
-      customer_username: "sarah_customer",
-      expert_username: "expert_maria",
-    },
-    {
-      id: "MU00004",
-      meetup_title: "Workout Assessment",
-      meetup_time: "2026-06-14 16:00:00",
-      customer_username: "john_doe",
-      expert_username: "expert_budi",
-    },
-    {
-      id: "MU00005",
-      meetup_title: "Weekly Check-in",
-      meetup_time: "2026-06-15 11:00:00",
-      customer_username: "sarah_customer",
-      expert_username: "expert_budi",
-    },
   ]);
 
+<<<<<<< Updated upstream
   // 12. Seed ProgramProgress (depends on Programs)
   await ProgramProgress.bulkCreate([
+=======
+  // Create Workouts
+  await Workout.bulkCreate([
+>>>>>>> Stashed changes
     {
       program_id: "PR00001",
       progress_index: 1,
@@ -442,11 +506,46 @@ function generateId(prefix, index) {
       progress_list: "WO00001,WO00002",
       progress_list_type: "workout",
     },
+<<<<<<< Updated upstream
     {
       program_id: "PR00003",
       progress_index: 1,
       progress_list: "WO00003,WO00004",
       progress_list_type: "workout",
+=======
+  ]);
+
+  // Create UserChats
+  await UserChat.bulkCreate([
+    { username: "john_doe", chat_group_id: "CG00001" },
+    { username: "expert_maria", chat_group_id: "CG00001" },
+    { username: "expert_budi", chat_group_id: "CG00001" },
+    { username: "john_doe", chat_group_id: "CG00002" },
+    { username: "expert_budi", chat_group_id: "CG00002" },
+    { username: "sarah_customer", chat_group_id: "CG00003" },
+    { username: "expert_maria", chat_group_id: "CG00003" },
+  ]);
+
+  // Create ChatLogs
+  await ChatLog.bulkCreate([
+    {
+      id: "CL00001",
+      chat_group_id: "CG00001",
+      username: "john_doe",
+      content: "Hi! I'm excited to start my fitness journey!",
+    },
+    {
+      id: "CL00002",
+      chat_group_id: "CG00001",
+      username: "expert_budi",
+      content: "Welcome, John! I'll help you with your nutrition plan.",
+    },
+    {
+      id: "CL00003",
+      chat_group_id: "CG00001",
+      username: "expert_maria",
+      content: "Great to have you here! Let's achieve your goals together.",
+>>>>>>> Stashed changes
     },
   ]);
 

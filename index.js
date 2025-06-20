@@ -1,4 +1,5 @@
 const express = require("express");
+<<<<<<< Updated upstream
 const { Op, where, Sequelize } = require("sequelize");
 const {
   Program,
@@ -9,6 +10,11 @@ const {
   Workout,
   UserProgram,
 } = require("./db");
+=======
+const axios = require("axios");
+const { Op, where } = require("sequelize");
+const { Program, User, ChatLog, ProgramProgress } = require("./db");
+>>>>>>> Stashed changes
 const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -48,6 +54,30 @@ app.post("/api/v1/chatbot", async (req, res) => {
 });
 
 // ============
+
+//  === NEWS ===
+app.get("/api/v1/news", async(req,res) => {
+  const response = await axios.get("https://newsapi.org/v2/top-headlines?category=health&apiKey="+process.env.NEWS_API_KEY)
+  const articles = response.data.articles
+  const articles_formatted = articles.filter((a)=>a.content != null).map((a)=>{
+    if(a.content != null){
+      return {
+        author:a.author == null?"Not defined":a.author,
+        title:a.title,
+        description:a.description,
+        publishedAt:a.publishedAt,
+        content:a.content
+      }
+    }
+  })
+  return res.json({
+    response:articles_formatted
+  })
+  
+})
+
+// ===========
+
 
 // == Chat_LOG ==
 
