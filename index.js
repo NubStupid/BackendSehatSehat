@@ -9,6 +9,7 @@ const {
   Meal,
   Workout,
   UserProgram,
+  ChatGroup,
 } = require("./db");
 const app = express();
 app.use(express.urlencoded({ extended: true }));
@@ -42,9 +43,43 @@ async function runChatbot(input) {
   return result.content;
 }
 
+async function runCustomerService(input) {
+  const messages = [
+    {
+      role: "system",
+      content:
+        `You are a Customer Service Agent!, your task is to answer user's question that has been provided with an answer below!
+        1. If the user ask about who made Sehat Sehat, answer with 'Sehat Sehat was made by Ferdinand, Calvin, Hanvy, and Cecilia'
+        2. If the user ask what is Sehat Sehat, answer with 'Sehat Sehat is a online health monitoring website powered by Android Studio'
+        3. If the user ask how to apply for a program, answer with 'To apply for program, first you need to topup in the profile section, by simply tapping your user icon. Then you can find the topup button, then you can assert the ammount of money you want to topup. Then you can go to the Program page and find which program you like to buy'
+        4. If the user ask the purpose of this website, answer with 'This website is built for a group project at ISTTS or now known as Institut STTS'
+        
+        If the user ask a question other than the example above, please make sure to reply that you are a customer service agent only provided to help guide the user in Sehat Sehat application!
+        Other than that, you can variate your answer but keep the ensence of the example above! You can also reply in the user's native language!
+        `,
+    },
+    {
+      role: "user",
+      content: input,
+    },
+  ];
+
+  const result = await model.invoke(messages);
+  console.log("Gemini Response:", result.content);
+  return result.content;
+}
+
 app.post("/api/v1/chatbot", async (req, res) => {
   const { message } = req.body;
+  // const chatbotUserExist = await User.findByPk("chatbot")
+
   const response = await runChatbot(message);
+  return res.json({ response: response });
+});
+
+app.post("/api/v1/customer_service", async (req, res) => {
+  const { message } = req.body;
+  const response = await runCustomerService(message);
   return res.json({ response: response });
 });
 
@@ -102,8 +137,21 @@ app.get("/api/v1/news", async(req,res) => {
 
 app.post("/api/v1/chat", async (req, res) => {
   const { content, username, chat_group } = req.body;
+  console.log(content,username,chat_group);
+  
   const countID = (await ChatLog.findAll()).length;
   const newID = "CL" + (countID + 1).toString().padStart(5, "0");
+  console.log(newID);
+  
+  const group_exist = await ChatGroup.findByPk(chat_group)
+  if(group_exist == null){
+    if(chat_group.split("_").includes("chatbot")){
+      await ChatGroup.create({
+        id:chat_group,
+        chat_name:"Chatbot Group - "+username
+      })
+    }
+  }
 
   await ChatLog.create({
     id: newID,

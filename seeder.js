@@ -48,6 +48,15 @@ function generateId(prefix, index) {
       balance: 150000,
     },
     {
+      username: "chatbot",
+      display_name: "Sehat Chatbot",
+      password: "",
+      dob: "",
+      role: "chatbot",
+      pp_url: "",
+      balance: 0,
+    },
+    {
       username: "expert_budi",
       display_name: "Expert Budi",
       password: "expert123",
@@ -75,9 +84,9 @@ function generateId(prefix, index) {
       balance: 0,
     },
     {
-      username: "sarah_customer",
+      username: "test",
       display_name: "Sarah Wilson",
-      password: "sarah123",
+      password: "test",
       dob: "1992-08-15",
       role: "customer",
       pp_url: "",
@@ -328,7 +337,7 @@ function generateId(prefix, index) {
     {
       id: "UP00003",
       program_id: "PR00003",
-      username: "sarah_customer",
+      username: "test",
       expires_in: "2026-03-30",
       chat_group_id: "CG00003",
       program_progress_id:"PP00003"
@@ -341,7 +350,7 @@ function generateId(prefix, index) {
     { username: "expert_budi", chat_group_id: "CG00001" },
     { username: "john_doe", chat_group_id: "CG00002" },
     { username: "expert_budi", chat_group_id: "CG00002" },
-    { username: "sarah_customer", chat_group_id: "CG00003" },
+    { username: "test", chat_group_id: "CG00003" },
     { username: "expert_maria", chat_group_id: "CG00003" },
   ]);
 
