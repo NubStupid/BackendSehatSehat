@@ -45,6 +45,7 @@ function generateId(prefix, index) {
       dob: "1990-01-01",
       role: "customer",
       pp_url: "",
+      topup: 150000,
     },
     {
       username: "expert_budi",
@@ -53,6 +54,7 @@ function generateId(prefix, index) {
       dob: "1985-05-12",
       role: "expert",
       pp_url: "",
+      topup: 0,
     },
     {
       username: "expert_maria",
@@ -61,6 +63,7 @@ function generateId(prefix, index) {
       dob: "1988-07-21",
       role: "expert",
       pp_url: "",
+      topup: 0,
     },
     {
       username: "anna_admin",
@@ -69,6 +72,7 @@ function generateId(prefix, index) {
       dob: "1980-03-10",
       role: "admin",
       pp_url: "",
+      topup: 0,
     },
     {
       username: "sarah_customer",
@@ -87,6 +91,26 @@ function generateId(prefix, index) {
       pp_url: "",
     },
   ]);
+      topup: 100000,
+    },
+  ]);
+
+    // {
+    //   username: "chef_jane",
+    //   display_name: "Chef Jane",
+    //   password: "cookwell",
+    //   dob: "1985-05-12",
+    //   role: "chef",
+    //   pp_url: "",
+    // },
+    // {
+    //   username: "mike_trainer",
+    //   display_name: "Mike Trainer",
+    //   password: "fitpass",
+    //   dob: "1988-07-21",
+    //   role: "gym",
+    //   pp_url: "",
+    // },
 
   // 2. Seed Programs (independent table)
   const programs = await Program.bulkCreate([
