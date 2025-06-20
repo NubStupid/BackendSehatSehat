@@ -32,7 +32,6 @@ function generateId(prefix, index) {
   });
 
   // Drop and recreate the database
-  // Drop and recreate the database
   await conn.query(`drop database if exists ${DB_NAME}`);
   await conn.query(`create database ${DB_NAME}`);
   await sequelize.sync({ force: true });
@@ -47,7 +46,6 @@ function generateId(prefix, index) {
       role: "customer",
       pp_url: "",
       balance: 150000,
-      balance: 150000,
     },
     {
       username: "expert_budi",
@@ -56,7 +54,6 @@ function generateId(prefix, index) {
       dob: "1985-05-12",
       role: "expert",
       pp_url: "",
-      balance: 0,
       balance: 0,
     },
     {
@@ -67,7 +64,6 @@ function generateId(prefix, index) {
       role: "expert",
       pp_url: "",
       balance: 0,
-      balance: 0,
     },
     {
       username: "anna_admin",
@@ -77,7 +73,6 @@ function generateId(prefix, index) {
       role: "admin",
       pp_url: "",
       balance: 0,
-      balance: 0,
     },
     {
       username: "sarah_customer",
@@ -86,6 +81,7 @@ function generateId(prefix, index) {
       dob: "1992-08-15",
       role: "customer",
       pp_url: "",
+      balance: 100000,
     },
     {
       username: "chef_jane",
@@ -94,26 +90,9 @@ function generateId(prefix, index) {
       dob: "1987-02-14",
       role: "expert",
       pp_url: "",
+      balance: 0,
     },
   ]);
-
-
-    // {
-    //   username: "chef_jane",
-    //   display_name: "Chef Jane",
-    //   password: "cookwell",
-    //   dob: "1985-05-12",
-    //   role: "chef",
-    //   pp_url: "",
-    // },
-    // {
-    //   username: "mike_trainer",
-    //   display_name: "Mike Trainer",
-    //   password: "fitpass",
-    //   dob: "1988-07-21",
-    //   role: "gym",
-    //   pp_url: "",
-    // },
 
   // 2. Seed Programs (independent table)
   const programs = await Program.bulkCreate([
@@ -200,14 +179,12 @@ function generateId(prefix, index) {
       total_calories: 400,
       total_estimated_price: 45000,
       expert_username: "anna_admin",
-      expert_username: "anna_admin",
     },
     {
       id: "PL00002",
       plan_name: "Day 2 Muscle Gain Plan",
       total_calories: 500,
       total_estimated_price: 40000,
-      expert_username: "anna_admin",
       expert_username: "anna_admin",
     },
   ]);
@@ -303,10 +280,34 @@ function generateId(prefix, index) {
     { id: "CG00003", chat_name: "Cardio Blast Group" },
     { id: "CG00004", chat_name: "Chatbot Group - john_doe" },
     { id: "CG00005", chat_name: "Chatbot Group - sarah_customer" },
-    { id: "CG00006", chat_name: "Extra Program Group" },
   ]);
 
   // 8. Seed UserProgram (depends on Programs, Users, and ChatGroups)
+  
+  await ProgramProgress.bulkCreate([
+    {
+      id:"PP00001",
+      program_id: "PR00001",
+      progress_index: 1,
+      progress_list: "PL00001,PL00002",
+      progress_list_type: "meal",
+    },
+    {
+      id:"PP00002",
+      program_id: "PR00002",
+      progress_index: 1,
+      progress_list: "WO00001,WO00002",
+      progress_list_type: "workout",
+    },
+    {
+      id:"PP00003",
+      program_id: "PR00003",
+      progress_index: 1,
+      progress_list: "WO00003,WO00004",
+      progress_list_type: "workout",
+    },
+  ]);
+  
   await UserProgram.bulkCreate([
     {
       id: "UP00001",
@@ -314,8 +315,7 @@ function generateId(prefix, index) {
       username: "john_doe",
       expires_in: "2026-12-31",
       chat_group_id: "CG00001",
-      createdAt: new Date("2025-06-05T10:15:00Z"),
-      updatedAt: new Date("2025-06-05T10:15:00Z"),
+      program_progress_id:"PP00001"
     },
     {
       id: "UP00002",
@@ -323,8 +323,7 @@ function generateId(prefix, index) {
       username: "john_doe",
       expires_in: "2026-04-15",
       chat_group_id: "CG00002",
-      createdAt: new Date("2025-06-10T14:30:00Z"),
-      updatedAt: new Date("2025-06-10T14:30:00Z"),
+      program_progress_id:"PP00002"
     },
     {
       id: "UP00003",
@@ -332,20 +331,9 @@ function generateId(prefix, index) {
       username: "sarah_customer",
       expires_in: "2026-03-30",
       chat_group_id: "CG00003",
-      createdAt: new Date("2025-06-15T08:00:00Z"),
-      updatedAt: new Date("2025-06-15T08:00:00Z"),
-    },
-    {
-      id: "UP00004",
-      program_id: "PR00001",
-      username: "sarah_customer",
-      expires_in: "2026-07-01",
-      chat_group_id: "CG00006",
-      createdAt: new Date("2025-06-20T16:45:00Z"),
-      updatedAt: new Date("2025-06-20T16:45:00Z"),
+      program_progress_id:"PP00003"
     },
   ]);
-
   // 9. Seed UserChat (depends on Users and ChatGroups)
   await UserChat.bulkCreate([
     { username: "john_doe", chat_group_id: "CG00001" },
@@ -377,61 +365,8 @@ function generateId(prefix, index) {
       username: "expert_maria",
       content: "Great to have you here! Let's achieve your goals together.",
     },
-    {
-      id: "CL00004",
-      chat_group_id: "CG00004",
-      username: "john_doe",
-      content: "What's the best way to start my weight loss journey?",
-    },
-    {
-      id: "CL00005",
-      chat_group_id: "CG00004",
-      username: "chef_jane",
-      content:
-        "Great question! Starting a weight loss journey requires a combination of proper nutrition and regular exercise. I recommend beginning with a balanced diet rich in lean proteins, vegetables, and whole grains, combined with 30 minutes of moderate exercise 3-4 times per week. Would you like specific meal or workout suggestions?",
-    },
   ]);
-
-  // 11. Seed Meetup (depends on Users)
-  await Meetup.bulkCreate([
-    {
-      id: "MU00001",
-      meetup_title: "Initial Consultation",
-      meetup_time: "2026-06-11 10:00:00",
-      customer_username: "john_doe",
-      expert_username: "expert_maria",
-    },
-    {
-      id: "MU00002",
-      meetup_title: "Progress Review",
-      meetup_time: "2026-06-12 14:00:00",
-      customer_username: "john_doe",
-      expert_username: "expert_budi",
-    },
-  ]);
-
-  // 12. Seed ProgramProgress (depends on Programs)
-  await ProgramProgress.bulkCreate([
-    {
-      program_id: "PR00001",
-      progress_index: 1,
-      progress_list: "PL00001,PL00002",
-      progress_list_type: "meal",
-    },
-    {
-      program_id: "PR00002",
-      progress_index: 1,
-      progress_list: "WO00001,WO00002",
-      progress_list_type: "workout",
-    },
-    {
-      program_id: "PR00003",
-      progress_index: 1,
-      progress_list: "WO00003,WO00004",
-      progress_list_type: "workout",
-    },
-  ]);
-
+  
   console.log("Database seeded successfully!");
   process.exit(0);
 })();

@@ -1,4 +1,3 @@
-// db.js
 const { Sequelize, Model, DataTypes } = require("sequelize");
 
 const DB_NAME = "MDPSEHAT";
@@ -12,7 +11,7 @@ const sequelize = new Sequelize(DB_NAME, DB_USER, DB_PASS, {
   logging: false,
 });
 
-// User
+// User Model
 class User extends Model {}
 User.init(
   {
@@ -26,6 +25,7 @@ User.init(
     dob: { type: DataTypes.DATEONLY, allowNull: true },
     role: { type: DataTypes.STRING, allowNull: false },
     pp_url: { type: DataTypes.TEXT, allowNull: true },
+    balance: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
   },
   {
     sequelize,
@@ -36,7 +36,7 @@ User.init(
   }
 );
 
-// Program
+// Program Model
 class Program extends Model {}
 Program.init(
   {
@@ -53,7 +53,7 @@ Program.init(
   }
 );
 
-// UserProgram
+// UserProgram Model
 class UserProgram extends Model {}
 UserProgram.init(
   {
@@ -62,6 +62,7 @@ UserProgram.init(
     username: DataTypes.STRING,
     expires_in: DataTypes.DATE,
     chat_group_id: DataTypes.STRING,
+    program_progress_id: DataTypes.STRING,  // Added ProgramProgress reference
   },
   {
     sequelize,
@@ -72,7 +73,7 @@ UserProgram.init(
   }
 );
 
-// ProgramProgress
+// ProgramProgress Model
 class ProgramProgress extends Model {}
 ProgramProgress.init(
   {
@@ -91,7 +92,7 @@ ProgramProgress.init(
   }
 );
 
-// Meal
+// Meal Model
 class Meal extends Model {}
 Meal.init(
   {
@@ -112,7 +113,7 @@ Meal.init(
   }
 );
 
-// Plan
+// Plan Model
 class Plan extends Model {}
 Plan.init(
   {
@@ -131,7 +132,7 @@ Plan.init(
   }
 );
 
-// MealPlan
+// MealPlan Model
 class MealPlan extends Model {}
 MealPlan.init(
   {
@@ -147,7 +148,7 @@ MealPlan.init(
   }
 );
 
-// Meetup
+// Meetup Model
 class Meetup extends Model {}
 Meetup.init(
   {
@@ -166,7 +167,7 @@ Meetup.init(
   }
 );
 
-// Workout
+// Workout Model
 class Workout extends Model {}
 Workout.init(
   {
@@ -185,7 +186,7 @@ Workout.init(
   }
 );
 
-// ChatGroup
+// ChatGroup Model
 class ChatGroup extends Model {}
 ChatGroup.init(
   {
@@ -201,7 +202,7 @@ ChatGroup.init(
   }
 );
 
-// UserChat
+// UserChat Model
 class UserChat extends Model {}
 UserChat.init(
   {
@@ -217,7 +218,7 @@ UserChat.init(
   }
 );
 
-// ChatLog
+// ChatLog Model
 class ChatLog extends Model {}
 ChatLog.init(
   {
@@ -253,6 +254,7 @@ Program.hasMany(ProgramProgress, { foreignKey: "program_id" });
 UserProgram.belongsTo(User, { foreignKey: "username" });
 UserProgram.belongsTo(Program, { foreignKey: "program_id" });
 UserProgram.belongsTo(ChatGroup, { foreignKey: "chat_group_id" });
+UserProgram.belongsTo(ProgramProgress, { foreignKey: "program_progress_id" }); // New association
 
 ProgramProgress.belongsTo(Program, { foreignKey: "program_id" });
 

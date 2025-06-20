@@ -1,4 +1,5 @@
 const express = require("express");
+const axios = require("axios")
 const { Op, where, Sequelize } = require("sequelize");
 const {
   Program,
@@ -862,3 +863,19 @@ app.get("/api/v1/reports/monthly-purchases", async (req, res) => {
     res.status(500).json({ error: "Gagal mengambil laporan bulanan" });
   }
 });
+
+app.post("/api/v1/programs/user",async(req,res)=>{
+  const {username} = req.body
+  const user_programs = await UserProgram.findAll({
+    where:{
+      username:username
+    }
+  })
+  const programs = await Promise.all(user_programs.map(async (up)=>{
+      const p = await Program.findByPk(up.program_id)
+      return p
+  }))
+  console.log(programs);
+  
+  return res.send(programs)
+})
