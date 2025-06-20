@@ -1,13 +1,20 @@
 const express = require("express");
-const { Op, where } = require("sequelize");
-const { Program, User, ChatLog, ProgramProgress } = require("./db");
+const { Op, where, Sequelize } = require("sequelize");
+const {
+  Program,
+  User,
+  ChatLog,
+  ProgramProgress,
+  Meal,
+  Workout,
+  UserProgram,
+} = require("./db");
 const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 const port = 3000;
 
 // Chatbot
-
 require("dotenv").config();
 const { ChatGoogleGenerativeAI } = require("@langchain/google-genai");
 
@@ -74,9 +81,8 @@ app.get("/api/v1/chat/:chat_group_id", async (req, res) => {
   });
 });
 
-
-app.post("/api/v1/users/sync", async (req,res) => {
-  const users = await User.findAll()
+app.post("/api/v1/users/sync", async (req, res) => {
+  const users = await User.findAll();
   const users_sync = users.map((l) => {
     if (l.deletedAt != null) {
       return {
@@ -94,14 +100,14 @@ app.post("/api/v1/users/sync", async (req,res) => {
     }
   });
   return res.status(200).json({
-    status:200,
-    users: users_sync
-  })
-})
+    status: 200,
+    users: users_sync,
+  });
+});
 
-app.post("/api/v1/programs/sync", async (req,res)=>{
-  const programs = await Program.findAll()
-  const program_sync =programs.map((l) => {
+app.post("/api/v1/programs/sync", async (req, res) => {
+  const programs = await Program.findAll();
+  const program_sync = programs.map((l) => {
     if (l.deletedAt != null) {
       return {
         ...l.dataValues,
@@ -118,16 +124,16 @@ app.post("/api/v1/programs/sync", async (req,res)=>{
     }
   });
   console.log(program_sync);
-  
-  return res.status(200).json({
-    status:200,
-    programs:program_sync
-  })
-})
 
-app.post("/api/v1/programs/progress/sync", async (req,res)=>{
-  const programs = await ProgramProgress.findAll()
-  const program_sync =programs.map((l) => {
+  return res.status(200).json({
+    status: 200,
+    programs: program_sync,
+  });
+});
+
+app.post("/api/v1/programs/progress/sync", async (req, res) => {
+  const programs = await ProgramProgress.findAll();
+  const program_sync = programs.map((l) => {
     if (l.deletedAt != null) {
       return {
         ...l.dataValues,
@@ -144,13 +150,12 @@ app.post("/api/v1/programs/progress/sync", async (req,res)=>{
     }
   });
   console.log(program_sync);
-  
-  return res.status(200).json({
-    status:200,
-    progress:program_sync
-  })
-})
 
+  return res.status(200).json({
+    status: 200,
+    progress: program_sync,
+  });
+});
 
 app.post("/api/v1/chat/sync", async (req, res) => {
   const { group_id, logs } = req.body;
@@ -437,22 +442,11 @@ app.get("/api/v1/user/:username/dashboard", async (req, res) => {
 // Get all programs (for program listing)
 app.get("/api/v1/programs", async (req, res) => {
   try {
-    const programs = await Program.findAll();
-
-    const transformedPrograms = programs.map((p) => {
-      // ambil semua field selain `deletedAt`
-      const { deletedAt, ...rest } = p.toJSON();
-      return {
-        ...rest,
-        createdAt: new Date(rest.createdAt).getTime(),
-        updatedAt: new Date(rest.updatedAt).getTime(),
-        // jangan sertakan deletedAt sama sekali
-      };
-    });
+    const programs = await Program.findAll({ where: { deletedAt: null } });
 
     return res.status(200).json({
       status: 200,
-      programs: transformedPrograms,
+      programs: programs,
     });
   } catch (error) {
     console.error("Error fetching programs:", error);
@@ -492,7 +486,7 @@ app.post("/api/v1/programs", async (req, res) => {
   try {
     // Hitung ID baru
     const countID = (await Program.findAll()).length;
-    const newID = "P" + (countID + 1).toString().padStart(3, "0");
+    const newID = "PR" + (countID + 1).toString().padStart(5, "0");
 
     const newProgram = await Program.create({
       id: newID,
@@ -522,7 +516,9 @@ app.put("/api/v1/programs/:id", async (req, res) => {
       where: { id: id, deletedAt: null },
     });
     if (!program) {
-      return res.status(404).json({ status: 404, error: "Program not found" });
+      return res
+        .status(404)
+        .json({ status: 404, message: "Program not found" });
     }
 
     program.program_name = program_name;
@@ -536,7 +532,7 @@ app.put("/api/v1/programs/:id", async (req, res) => {
       program: program,
     });
   } catch (err) {
-    return res.status(500).json({ status: 500, error: err.message });
+    return res.status(500).json({ status: 500, message: err.message });
   }
 });
 
@@ -544,15 +540,11 @@ app.put("/api/v1/programs/:id", async (req, res) => {
 app.delete("/api/v1/programs/:id", async (req, res) => {
   const { id } = req.params;
   try {
-    const program = await Program.findOne({
-      where: { id: id, deletedAt: null },
-    });
-    if (!program) {
+    const deletedCount = await Program.destroy({ where: { id } });
+
+    if (deletedCount === 0) {
       return res.status(404).json({ status: 404, error: "Program not found" });
     }
-
-    program.deletedAt = new Date();
-    await program.save();
 
     return res.status(200).json({
       status: 200,
@@ -616,3 +608,209 @@ app.delete(
     }
   }
 );
+
+// pengaturan id meal dan workout
+const padId = (prefix, number) => {
+  return `${prefix}${String(number).padStart(5, "0")}`;
+};
+
+// POST /meals - Tambah Meal
+app.post("/meals", async (req, res) => {
+  try {
+    const { meal_name, ingredients, calories, fat, protein, program_id } =
+      req.body;
+
+    if (
+      !meal_name ||
+      ingredients == null ||
+      calories == null ||
+      fat == null ||
+      protein == null ||
+      !program_id
+    ) {
+      return res.status(400).json({ message: "Data tidak lengkap" });
+    }
+
+    // Hitung jumlah meal yang ada untuk ID baru
+    const totalMeals = await Meal.count();
+    const mealId = padId("ME", totalMeals + 1);
+
+    const newMeal = await Meal.create({
+      id: mealId,
+      meal_name,
+      ingredients,
+      calories,
+      fat,
+      protein,
+      program_id,
+    });
+
+    res.status(201).json(newMeal);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Gagal menambahkan meal" });
+  }
+});
+
+// POST /workouts - Tambah Workout
+app.post("/workouts", async (req, res) => {
+  try {
+    const { workout_title, estimated_time, focused_at, program_id } = req.body;
+
+    if (
+      !workout_title ||
+      estimated_time == null ||
+      !focused_at ||
+      !program_id
+    ) {
+      return res.status(400).json({ message: "Data tidak lengkap" });
+    }
+
+    const totalWorkouts = await Workout.count();
+    const workoutId = padId("WO", totalWorkouts + 1);
+
+    const newWorkout = await Workout.create({
+      id: workoutId,
+      workout_title,
+      estimated_time,
+      focused_at,
+      program_id,
+    });
+
+    res.status(201).json(newWorkout);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Gagal menambahkan workout" });
+  }
+});
+
+// ambil semua makanan dari 1 program
+app.get("/api/v1/programs/:program_id/meals", async (req, res) => {
+  const { program_id } = req.params;
+  try {
+    const meals = await Meal.findAll({
+      where: { program_id: program_id },
+      order: [["createdAt", "ASC"]],
+    });
+    return res.status(200).json({
+      status: 200,
+      meals: meals,
+    });
+  } catch (err) {
+    console.error("Error fetching meals:", err);
+    return res.status(500).json({
+      status: 500,
+      message: "Gagal mengambil meals",
+      error: err.message,
+    });
+  }
+});
+
+// ambil semua workout dari 1 program
+app.get("/api/v1/programs/:program_id/workouts", async (req, res) => {
+  const { program_id } = req.params;
+  try {
+    const workouts = await Workout.findAll({
+      where: { program_id: program_id },
+      order: [["createdAt", "ASC"]],
+    });
+    return res.status(200).json({
+      status: 200,
+      workouts: workouts,
+    });
+  } catch (err) {
+    console.error("Error fetching workouts:", err);
+    return res.status(500).json({
+      status: 500,
+      message: "Gagal mengambil workouts",
+      error: err.message,
+    });
+  }
+});
+
+// ubah role
+app.put("/api/v1/users/:username/:role", async (req, res) => {
+  const { username, role } = req.params;
+
+  const validRoles = ["customer", "trainer", "admin"];
+
+  if (!validRoles.includes(role)) {
+    return res.status(400).json({
+      status: 400,
+      message: `Invalid role. Allowed roles are: ${validRoles.join(", ")}`,
+    });
+  }
+
+  try {
+    const user = await User.findOne({ where: { username } });
+
+    if (!user) {
+      return res.status(404).json({
+        status: 404,
+        message: `User with username '${username}' not found`,
+      });
+    }
+
+    user.role = role;
+    await user.save();
+
+    return res.status(200).json({
+      message: "User role updated successfully",
+      success: true,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      status: 500,
+      message: "Failed to update user role",
+      error: err.message,
+    });
+  }
+});
+
+// dapetin report bulanan
+app.get("/api/v1/reports/monthly-purchases", async (req, res) => {
+  try {
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth(), 1);
+    const end = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+    const results = await UserProgram.findAll({
+      where: {
+        createdAt: { [Op.between]: [start, end] },
+      },
+      include: [
+        {
+          model: Program,
+          attributes: ["program_name", "pricing"],
+        },
+      ],
+      attributes: [
+        "program_id",
+        [Sequelize.fn("COUNT", Sequelize.col("username")), "buyerCount"],
+        [
+          Sequelize.fn("SUM", Sequelize.literal("Program.pricing")),
+          "totalRevenue",
+        ],
+        [
+          Sequelize.fn("MIN", Sequelize.col("UserProgram.createdAt")),
+          "purchaseDate",
+        ],
+      ],
+      group: ["program_id", "Program.id"],
+    });
+
+    const report = results.map((r) => ({
+      programName: r.Program.program_name,
+      purchaseDate: r.getDataValue("purchaseDate").toISOString().split("T")[0],
+      buyerCount: parseInt(r.getDataValue("buyerCount")),
+      totalRevenue: parseFloat(r.getDataValue("totalRevenue")),
+    }));
+
+    console.log("report: ", report);
+
+    res.status(200).json(report);
+  } catch (err) {
+    console.error("Error generating report:", err);
+    res.status(500).json({ error: "Gagal mengambil laporan bulanan" });
+  }
+});
