@@ -255,6 +255,34 @@ app.post("/api/v1/programs/progress/sync", async (req, res) => {
   });
 });
 
+app.post("/api/v1/programs/user/sync", async (req, res) => {
+  const programs = await UserProgram.findAll();
+  const program_sync = programs.map((l) => {
+    if (l.deletedAt != null) {
+      return {
+        ...l.dataValues,
+        expires_in:new Date(l.expires_in).getTime(),
+        createdAt: new Date(l.createdAt).getTime(),
+        updatedAt: new Date(l.updatedAt).getTime(),
+        deletedAt: new Date(l.deletedAt).getTime(),
+      };
+    } else {
+      return {
+        ...l.dataValues,
+        expires_in:new Date(l.expires_in).getTime(),
+        createdAt: new Date(l.createdAt).getTime(),
+        updatedAt: new Date(l.updatedAt).getTime(),
+      };
+    }
+  });
+  console.log(program_sync);
+
+  return res.status(200).json({
+    status: 200,
+    userPrograms: program_sync,
+  });
+});
+
 app.post("/api/v1/chat/sync", async (req, res) => {
   const { group_id, logs } = req.body;
   console.log(logs);
