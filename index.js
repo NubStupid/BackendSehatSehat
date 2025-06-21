@@ -145,10 +145,11 @@ app.post("/api/v1/chat", async (req, res) => {
   
   const group_exist = await ChatGroup.findByPk(chat_group)
   if(group_exist == null){
-    if(chat_group.split("_").includes("chatbot")){
+    if(chat_group.split("_").includes("chatbot")||chat_group.split("_").includes("cs")){
+      let group_name = chat_group.split("_").includes("chatbot")?"Chatbot Group":"Customer Service"
       await ChatGroup.create({
         id:chat_group,
-        chat_name:"Chatbot Group - "+username
+        chat_name:group_name+" - "+username
       })
     }
   }
