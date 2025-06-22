@@ -53,6 +53,7 @@ async function runCustomerService(input) {
         2. If the user ask what is Sehat Sehat, answer with 'Sehat Sehat is a online health monitoring website powered by Android Studio'
         3. If the user ask how to apply for a program, answer with 'To apply for program, first you need to topup in the profile section, by simply tapping your user icon. Then you can find the topup button, then you can assert the ammount of money you want to topup. Then you can go to the Program page and find which program you like to buy'
         4. If the user ask the purpose of this website, answer with 'This website is built for a group project at ISTTS or now known as Institut STTS'
+        5. If the user ask about the contribution each developer had, please answer refering to this github link 'https://github.com/NubStupid/FrontEndSehatSehat' and 'https://github.com/NubStupid/BackendSehatSehat'
         
         If the user ask a question other than the example above, please make sure to reply that you are a customer service agent only provided to help guide the user in Sehat Sehat application!
         Other than that, you can variate your answer but keep the ensence of the example above! You can also reply in the user's native language!
@@ -190,6 +191,24 @@ app.get("/api/v1/chat/:chat_group_id", async (req, res) => {
   });
 });
 
+
+app.post("/api/v1/workout/sync", async (req, res) => {
+  const workout = await Workout.findAll();
+  return res.status(200).json({
+    status: 200,
+    workouts: workout,
+  });
+});
+
+app.post("/api/v1/meal/sync", async (req, res) => {
+  const meals = await Meal.findAll();
+  return res.status(200).json({
+    status: 200,
+    meals: meals,
+  });
+});
+
+
 app.post("/api/v1/users/sync", async (req, res) => {
   const users = await User.findAll();
   const users_sync = users.map((l) => {
@@ -265,6 +284,31 @@ app.post("/api/v1/programs/progress/sync", async (req, res) => {
     progress: program_sync,
   });
 });
+
+app.put("/api/v1/programs/progress/:progress_id", async(req,res)=>{
+  const {progress_id} = req.params
+  let progress = await ProgramProgress.findByPk(progress_id)
+  if(progress != null){
+    await ProgramProgress.update({
+      progress_index:Sequelize.literal('progress_index + 1')
+    },
+      {
+      where:{
+        id:progress_id
+      }
+    })
+  }
+  progress = await ProgramProgress.findByPk(progress_id)
+  return res.status(200).json({
+    status:200,
+    progress:{
+      ...progress.dataValues,
+      createdAt: new Date(progress.createdAt).getTime(),
+      updatedAt: new Date(progress.updatedAt).getTime(),
+      deletedAt: new Date(progress.deletedAt).getTime(),
+    }
+  })
+})
 
 app.post("/api/v1/programs/user/sync", async (req, res) => {
   const programs = await UserProgram.findAll();
