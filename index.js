@@ -191,7 +191,6 @@ app.get("/api/v1/chat/:chat_group_id", async (req, res) => {
   });
 });
 
-
 app.post("/api/v1/workout/sync", async (req, res) => {
   const workout = await Workout.findAll();
   return res.status(200).json({
@@ -207,7 +206,6 @@ app.post("/api/v1/meal/sync", async (req, res) => {
     meals: meals,
   });
 });
-
 
 app.post("/api/v1/users/sync", async (req, res) => {
   const users = await User.findAll();
@@ -285,30 +283,32 @@ app.post("/api/v1/programs/progress/sync", async (req, res) => {
   });
 });
 
-app.put("/api/v1/programs/progress/:progress_id", async(req,res)=>{
-  const {progress_id} = req.params
-  let progress = await ProgramProgress.findByPk(progress_id)
-  if(progress != null){
-    await ProgramProgress.update({
-      progress_index:Sequelize.literal('progress_index + 1')
-    },
+app.put("/api/v1/programs/progress/:progress_id", async (req, res) => {
+  const { progress_id } = req.params;
+  let progress = await ProgramProgress.findByPk(progress_id);
+  if (progress != null) {
+    await ProgramProgress.update(
       {
-      where:{
-        id:progress_id
+        progress_index: Sequelize.literal("progress_index + 1"),
+      },
+      {
+        where: {
+          id: progress_id,
+        },
       }
-    })
+    );
   }
-  progress = await ProgramProgress.findByPk(progress_id)
+  progress = await ProgramProgress.findByPk(progress_id);
   return res.status(200).json({
-    status:200,
-    progress:{
+    status: 200,
+    progress: {
       ...progress.dataValues,
       createdAt: new Date(progress.createdAt).getTime(),
       updatedAt: new Date(progress.updatedAt).getTime(),
       deletedAt: new Date(progress.deletedAt).getTime(),
-    }
-  })
-})
+    },
+  });
+});
 
 app.post("/api/v1/programs/user/sync", async (req, res) => {
   const programs = await UserProgram.findAll();
@@ -993,6 +993,93 @@ app.get("/api/v1/reports/monthly-purchases", async (req, res) => {
   } catch (err) {
     console.error("Error generating report:", err);
     res.status(500).json({ error: "Gagal mengambil laporan bulanan" });
+  }
+});
+
+app.get("/api/v1/reports", async (req, res) => {
+  try {
+    const { start, end } = req.query;
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+
+    const results = await UserProgram.findAll({
+      where: {
+        createdAt: { [Op.between]: [startDate, endDate] },
+      },
+      include: [{ model: Program, attributes: ["program_name", "pricing"] }],
+      attributes: [
+        "program_id",
+        [Sequelize.fn("COUNT", Sequelize.col("username")), "buyerCount"],
+        [
+          Sequelize.fn("SUM", Sequelize.literal("Program.pricing")),
+          "totalRevenue",
+        ],
+        [
+          Sequelize.fn("MIN", Sequelize.col("UserProgram.createdAt")),
+          "purchaseDate",
+        ],
+      ],
+      group: ["program_id", "Program.id"],
+    });
+
+    const report = results.map((r) => ({
+      programName: r.Program.program_name,
+      purchaseDate: r.getDataValue("purchaseDate").toISOString().split("T")[0],
+      buyerCount: parseInt(r.getDataValue("buyerCount")),
+      totalRevenue: parseFloat(r.getDataValue("totalRevenue")),
+    }));
+
+    res.status(200).json(report);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Gagal mengambil laporan" });
+  }
+});
+
+// report dgn filter start dan end
+app.get("/api/v1/reports/:start/:end", async (req, res) => {
+  try {
+    const { start, end } = req.params;
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+
+    console.log(startDate, " ", endDate);
+
+    const results = await UserProgram.findAll({
+      where: {
+        createdAt: { [Op.between]: [startDate, endDate] },
+      },
+      include: [{ model: Program, attributes: ["program_name", "pricing"] }],
+      attributes: [
+        "program_id",
+        [Sequelize.fn("COUNT", Sequelize.col("username")), "buyerCount"],
+        [
+          Sequelize.fn("SUM", Sequelize.literal("Program.pricing")),
+          "totalRevenue",
+        ],
+        [
+          Sequelize.fn("MIN", Sequelize.col("UserProgram.createdAt")),
+          "purchaseDate",
+        ],
+      ],
+      group: ["program_id", "Program.id"],
+    });
+
+    // console.log(results);
+
+    const report = results.map((r) => ({
+      programName: r.Program.program_name,
+      purchaseDate: r.getDataValue("purchaseDate").toISOString().split("T")[0],
+      buyerCount: parseInt(r.getDataValue("buyerCount")),
+      totalRevenue: parseFloat(r.getDataValue("totalRevenue")),
+    }));
+
+    console.log(report);
+
+    res.status(200).json(report);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Gagal mengambil laporan" });
   }
 });
 
