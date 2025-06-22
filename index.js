@@ -1174,3 +1174,79 @@ app.put(
     }
   }
 );
+
+
+// SB-Mid-server-oAhMF6_wm7K2AyTPmdixel7m
+const MIDTRANS_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY;  
+const MIDTRANS_API_URL = 'https://api.sandbox.midtrans.com/v2/charge';
+
+// const options = {
+//   method: 'POST',
+//   headers: {
+//     accept: 'application/json',
+//     'content-type': 'application/json',
+//     authorization: `Basic ${Buffer.from(MIDTRANS_SERVER_KEY + ':').toString('base64')}`
+//   },
+//   body: JSON.stringify({
+//     payment_type: 'qris',
+//     transaction_details: {order_id: 'order_id-0123', gross_amount: 100000},
+//     qris: {acquirer: 'gopay'}
+//   })
+// };
+
+// fetch(url, options)
+//   .then(res => res.json())
+//   .then(json => console.log(json))
+//   .catch(err => console.error(err));
+
+app.post("/api/v1/transaction", async(req,res)=>{
+  const {transactionDetails,acquirer} = req.body
+  const paymentData = {
+    payment_type:"qris",
+    transaction_details:transactionDetails,
+    qris:{
+      acquirer: acquirer
+    }
+  }
+  console.log(JSON.stringify(paymentData));
+  
+  try {
+    const response = await axios.post(MIDTRANS_API_URL, paymentData, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Basic ${Buffer.from(MIDTRANS_SERVER_KEY + ':').toString('base64')}`,  // Basic auth with server key
+      },
+    });
+    if (response.status === 200) {
+      if(response.data.actions){
+        return res.status(200).json({
+          status: 200,
+          payment_url: response.data.actions[0].url   
+        });
+      }else{
+        return res.status(200).json({
+          status: 400,
+          payment_url: "Duplicated"  
+        });
+      }
+    } else {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Failed to create payment transaction',
+      });
+    }
+  } catch (error) {
+    console.error('Error during Midtrans payment creation:', error);
+    if (error.response) {
+      return res.status(400).json({
+        status: 'error',
+        message: error.response.data.status_message || 'Unknown error occurred',
+      });
+    } else {
+      return res.status(500).json({
+        status: 'error',
+        message: 'An unknown error occurred during the payment request',
+      });
+    }
+  }
+})
