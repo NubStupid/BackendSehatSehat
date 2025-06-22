@@ -1,5 +1,5 @@
 const express = require("express");
-const axios = require("axios")
+const axios = require("axios");
 const { Op, where, Sequelize } = require("sequelize");
 const {
   Program,
@@ -19,6 +19,7 @@ const port = 3000;
 // Chatbot
 require("dotenv").config();
 const { ChatGoogleGenerativeAI } = require("@langchain/google-genai");
+const { interrupt } = require("@langchain/langgraph");
 
 const model = new ChatGoogleGenerativeAI({
   model: "gemini-1.5-flash",
@@ -47,8 +48,7 @@ async function runCustomerService(input) {
   const messages = [
     {
       role: "system",
-      content:
-        `You are a Customer Service Agent!, your task is to answer user's question that has been provided with an answer below!
+      content: `You are a Customer Service Agent!, your task is to answer user's question that has been provided with an answer below!
         1. If the user ask about who made Sehat Sehat, answer with 'Sehat Sehat was made by Ferdinand, Calvin, Hanvy, and Cecilia'
         2. If the user ask what is Sehat Sehat, answer with 'Sehat Sehat is a online health monitoring website powered by Android Studio'
         3. If the user ask how to apply for a program, answer with 'To apply for program, first you need to topup in the profile section, by simply tapping your user icon. Then you can find the topup button, then you can assert the ammount of money you want to topup. Then you can go to the Program page and find which program you like to buy'
@@ -86,71 +86,82 @@ app.post("/api/v1/customer_service", async (req, res) => {
 // ============
 
 //  === NEWS ===
-app.get("/api/v1/news", async(req,res) => {
-  const response = await axios.get("https://newsapi.org/v2/top-headlines?category=health&apiKey="+process.env.NEWS_API_KEY)
-  const articles = response.data.articles
-  const articles_formatted = articles.filter((a)=>a.content != null).map((a)=>{
-    if(a.content != null){
-      return {
-        author:a.author == null?"Not defined":a.author,
-        title:a.title,
-        description:a.description,
-        publishedAt:a.publishedAt,
-        content:a.content
+app.get("/api/v1/news", async (req, res) => {
+  const response = await axios.get(
+    "https://newsapi.org/v2/top-headlines?category=health&apiKey=" +
+      process.env.NEWS_API_KEY
+  );
+  const articles = response.data.articles;
+  const articles_formatted = articles
+    .filter((a) => a.content != null)
+    .map((a) => {
+      if (a.content != null) {
+        return {
+          author: a.author == null ? "Not defined" : a.author,
+          title: a.title,
+          description: a.description,
+          publishedAt: a.publishedAt,
+          content: a.content,
+        };
       }
-    }
-  })
+    });
   return res.json({
-    response:articles_formatted
-  })
-  
-})
+    response: articles_formatted,
+  });
+});
 
 // ===========
-
 
 //  === NEWS ===
-app.get("/api/v1/news", async(req,res) => {
-  const response = await axios.get("https://newsapi.org/v2/top-headlines?category=health&apiKey="+process.env.NEWS_API_KEY)
-  const articles = response.data.articles
-  const articles_formatted = articles.filter((a)=>a.content != null).map((a)=>{
-    if(a.content != null){
-      return {
-        author:a.author == null?"Not defined":a.author,
-        title:a.title,
-        description:a.description,
-        publishedAt:a.publishedAt,
-        content:a.content
+app.get("/api/v1/news", async (req, res) => {
+  const response = await axios.get(
+    "https://newsapi.org/v2/top-headlines?category=health&apiKey=" +
+      process.env.NEWS_API_KEY
+  );
+  const articles = response.data.articles;
+  const articles_formatted = articles
+    .filter((a) => a.content != null)
+    .map((a) => {
+      if (a.content != null) {
+        return {
+          author: a.author == null ? "Not defined" : a.author,
+          title: a.title,
+          description: a.description,
+          publishedAt: a.publishedAt,
+          content: a.content,
+        };
       }
-    }
-  })
+    });
   return res.json({
-    response:articles_formatted
-  })
-  
-})
+    response: articles_formatted,
+  });
+});
 
 // ===========
-
 
 // == Chat_LOG ==
 
 app.post("/api/v1/chat", async (req, res) => {
   const { content, username, chat_group } = req.body;
-  console.log(content,username,chat_group);
-  
+  console.log(content, username, chat_group);
+
   const countID = (await ChatLog.findAll()).length;
   const newID = "CL" + (countID + 1).toString().padStart(5, "0");
   console.log(newID);
-  
-  const group_exist = await ChatGroup.findByPk(chat_group)
-  if(group_exist == null){
-    if(chat_group.split("_").includes("chatbot")||chat_group.split("_").includes("cs")){
-      let group_name = chat_group.split("_").includes("chatbot")?"Chatbot Group":"Customer Service"
+
+  const group_exist = await ChatGroup.findByPk(chat_group);
+  if (group_exist == null) {
+    if (
+      chat_group.split("_").includes("chatbot") ||
+      chat_group.split("_").includes("cs")
+    ) {
+      let group_name = chat_group.split("_").includes("chatbot")
+        ? "Chatbot Group"
+        : "Customer Service";
       await ChatGroup.create({
-        id:chat_group,
-        chat_name:group_name+" - "+username
-      })
+        id: chat_group,
+        chat_name: group_name + " - " + username,
+      });
     }
   }
 
@@ -261,7 +272,7 @@ app.post("/api/v1/programs/user/sync", async (req, res) => {
     if (l.deletedAt != null) {
       return {
         ...l.dataValues,
-        expires_in:new Date(l.expires_in).getTime(),
+        expires_in: new Date(l.expires_in).getTime(),
         createdAt: new Date(l.createdAt).getTime(),
         updatedAt: new Date(l.updatedAt).getTime(),
         deletedAt: new Date(l.deletedAt).getTime(),
@@ -269,7 +280,7 @@ app.post("/api/v1/programs/user/sync", async (req, res) => {
     } else {
       return {
         ...l.dataValues,
-        expires_in:new Date(l.expires_in).getTime(),
+        expires_in: new Date(l.expires_in).getTime(),
         createdAt: new Date(l.createdAt).getTime(),
         updatedAt: new Date(l.updatedAt).getTime(),
       };
@@ -941,18 +952,94 @@ app.get("/api/v1/reports/monthly-purchases", async (req, res) => {
   }
 });
 
-app.post("/api/v1/programs/user",async(req,res)=>{
-  const {username} = req.body
+app.post("/api/v1/programs/user", async (req, res) => {
+  const { username } = req.body;
   const user_programs = await UserProgram.findAll({
-    where:{
-      username:username
-    }
-  })
-  const programs = await Promise.all(user_programs.map(async (up)=>{
-      const p = await Program.findByPk(up.program_id)
-      return p
-  }))
+    where: {
+      username: username,
+    },
+  });
+  const programs = await Promise.all(
+    user_programs.map(async (up) => {
+      const p = await Program.findByPk(up.program_id);
+      return p;
+    })
+  );
   console.log(programs);
-  
-  return res.send(programs)
-})
+
+  return res.send(programs);
+});
+
+app.put("/api/v1/users/:username/topup/:amount", async (req, res) => {
+  const { username } = req.params;
+  let amount = req.params;
+
+  amount = parseInt(req.params.amount, 10);
+
+  try {
+    const user = await User.findOne({ where: { username } });
+
+    if (!user) {
+      return res.status(404).json({
+        status: 404,
+        message: `User with username '${username}' not found`,
+      });
+    }
+
+    user.balance += amount;
+    await user.save();
+
+    return res.status(200).json({
+      message: "User balance updated successfully",
+      success: true,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      status: 500,
+      message: "Failed to update user balance",
+      error: err.message,
+    });
+  }
+});
+
+// --- ambil detail user berdasarkan username ---
+app.get("/api/v1/users/:username", userAvailable, async (req, res) => {
+  try {
+    const user = req.user;
+    return res.status(200).json(req.user);
+  } catch (err) {
+    console.error("Error fetching user:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch user profile",
+    });
+  }
+});
+
+// --- update profil user ---
+app.put(
+  "/api/v1/users/:username/updateProfile/:display_name/:password/:dob",
+  userAvailable,
+  async (req, res) => {
+    const { display_name, password, dob } = req.params;
+    const user = req.user;
+    try {
+      user.display_name = display_name;
+      user.password = password;
+      user.dob = dob;
+      user.updatedAt = new Date();
+      await user.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "Profile updated successfully",
+      });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to update profile",
+      });
+    }
+  }
+);
