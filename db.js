@@ -36,6 +36,23 @@ User.init(
   }
 );
 
+class Article extends Model {}
+Article.init(
+  {
+    id: { type: DataTypes.STRING, primaryKey: true },
+    title: { type: DataTypes.STRING, allowNull: false },
+    content: { type: DataTypes.TEXT, allowNull: false },
+    image_url: { type: DataTypes.STRING, allowNull: true },
+  },
+  {
+    sequelize,
+    modelName: "Article",
+    tableName: "articles",
+    timestamps: true,
+    paranoid: true,
+  }
+);
+
 // Program Model
 class Program extends Model {}
 Program.init(
@@ -62,7 +79,7 @@ UserProgram.init(
     username: DataTypes.STRING,
     expires_in: DataTypes.DATE,
     chat_group_id: DataTypes.STRING,
-    program_progress_id: DataTypes.STRING,  // Added ProgramProgress reference
+    program_progress_id: DataTypes.STRING, // Added ProgramProgress reference
   },
   {
     sequelize,
@@ -304,4 +321,5 @@ module.exports = {
   ChatGroup,
   UserChat,
   ChatLog,
+  Article,
 };

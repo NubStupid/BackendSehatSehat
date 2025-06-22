@@ -16,6 +16,7 @@ const {
   ChatGroup,
   UserChat,
   ChatLog,
+  Article,
 } = require("./db");
 
 const mysql = require("mysql2/promise");
@@ -292,31 +293,31 @@ function generateId(prefix, index) {
   ]);
 
   // 8. Seed UserProgram (depends on Programs, Users, and ChatGroups)
-  
+
   await ProgramProgress.bulkCreate([
     {
-      id:"PP00001",
+      id: "PP00001",
       program_id: "PR00001",
       progress_index: 1,
       progress_list: "PL00001,PL00002",
       progress_list_type: "meal",
     },
     {
-      id:"PP00002",
+      id: "PP00002",
       program_id: "PR00002",
       progress_index: 1,
       progress_list: "WO00001,WO00002",
       progress_list_type: "workout",
     },
     {
-      id:"PP00003",
+      id: "PP00003",
       program_id: "PR00003",
       progress_index: 1,
       progress_list: "WO00003,WO00004",
       progress_list_type: "workout",
     },
   ]);
-  
+
   await UserProgram.bulkCreate([
     {
       id: "UP00001",
@@ -324,7 +325,7 @@ function generateId(prefix, index) {
       username: "john_doe",
       expires_in: "2026-12-31",
       chat_group_id: "CG00001",
-      program_progress_id:"PP00001"
+      program_progress_id: "PP00001",
     },
     {
       id: "UP00002",
@@ -332,7 +333,7 @@ function generateId(prefix, index) {
       username: "john_doe",
       expires_in: "2026-04-15",
       chat_group_id: "CG00002",
-      program_progress_id:"PP00002"
+      program_progress_id: "PP00002",
     },
     {
       id: "UP00003",
@@ -340,7 +341,7 @@ function generateId(prefix, index) {
       username: "test",
       expires_in: "2026-03-30",
       chat_group_id: "CG00003",
-      program_progress_id:"PP00003"
+      program_progress_id: "PP00003",
     },
   ]);
   // 9. Seed UserChat (depends on Users and ChatGroups)
@@ -375,7 +376,32 @@ function generateId(prefix, index) {
       content: "Great to have you here! Let's achieve your goals together.",
     },
   ]);
-  
+
+  // 11. Seed Article
+  await Article.bulkCreate([
+    {
+      id: "AR00001",
+      title: "5 Tips Menjaga Pola Hidup Sehat",
+      content:
+        "Menjaga pola hidup sehat dimulai dari hal kecil: makan bergizi, cukup tidur, dan rutin olahraga.",
+      image_url: "https://example.com/article1.jpg",
+    },
+    {
+      id: "AR00002",
+      title: "Manfaat Air Putih untuk Kesehatan Tubuh",
+      content:
+        "Air putih membantu menjaga keseimbangan cairan tubuh, memperlancar metabolisme, dan detoksifikasi.",
+      image_url: "https://example.com/article2.jpg",
+    },
+    {
+      id: "AR00003",
+      title: "Cara Efektif Membakar Lemak Saat Workout",
+      content:
+        "High Intensity Interval Training (HIIT) sangat efektif dalam membakar lemak dan meningkatkan metabolisme.",
+      image_url: "https://example.com/article3.jpg",
+    },
+  ]);
+
   console.log("Database seeded successfully!");
   process.exit(0);
 })();

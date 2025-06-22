@@ -114,29 +114,29 @@ app.get("/api/v1/news", async (req, res) => {
 // ===========
 
 //  === NEWS ===
-app.get("/api/v1/news", async (req, res) => {
-  const response = await axios.get(
-    "https://newsapi.org/v2/top-headlines?category=health&apiKey=" +
-      process.env.NEWS_API_KEY
-  );
-  const articles = response.data.articles;
-  const articles_formatted = articles
-    .filter((a) => a.content != null)
-    .map((a) => {
-      if (a.content != null) {
-        return {
-          author: a.author == null ? "Not defined" : a.author,
-          title: a.title,
-          description: a.description,
-          publishedAt: a.publishedAt,
-          content: a.content,
-        };
-      }
-    });
-  return res.json({
-    response: articles_formatted,
-  });
-});
+// app.get("/api/v1/news", async (req, res) => {
+//   const response = await axios.get(
+//     "https://newsapi.org/v2/top-headlines?category=health&apiKey=" +
+//       process.env.NEWS_API_KEY
+//   );
+//   const articles = response.data.articles;
+//   const articles_formatted = articles
+//     .filter((a) => a.content != null)
+//     .map((a) => {
+//       if (a.content != null) {
+//         return {
+//           author: a.author == null ? "Not defined" : a.author,
+//           title: a.title,
+//           description: a.description,
+//           publishedAt: a.publishedAt,
+//           content: a.content,
+//         };
+//       }
+//     });
+//   return res.json({
+//     response: articles_formatted,
+//   });
+// });
 
 // ===========
 
@@ -1175,11 +1175,6 @@ app.put(
   }
 );
 
-
-// SB-Mid-server-oAhMF6_wm7K2AyTPmdixel7m
-const MIDTRANS_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY;  
-const MIDTRANS_API_URL = 'https://api.sandbox.midtrans.com/v2/charge';
-
 // const options = {
 //   method: 'POST',
 //   headers: {
@@ -1199,54 +1194,113 @@ const MIDTRANS_API_URL = 'https://api.sandbox.midtrans.com/v2/charge';
 //   .then(json => console.log(json))
 //   .catch(err => console.error(err));
 
-app.post("/api/v1/transaction", async(req,res)=>{
-  const {transactionDetails,acquirer} = req.body
-  const paymentData = {
-    payment_type:"qris",
-    transaction_details:transactionDetails,
-    qris:{
-      acquirer: acquirer
-    }
-  }
-  console.log(JSON.stringify(paymentData));
-  
+app.post("/api/v1/transaction", async (req, res) => {
+  const { transactionDetails, acquirer, userId, programPrice } = req.body;
+
   try {
-    const response = await axios.post(MIDTRANS_API_URL, paymentData, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Basic ${Buffer.from(MIDTRANS_SERVER_KEY + ':').toString('base64')}`,  // Basic auth with server key
-      },
-    });
-    if (response.status === 200) {
-      if(response.data.actions){
-        return res.status(200).json({
-          status: 200,
-          payment_url: response.data.actions[0].url   
-        });
-      }else{
-        return res.status(200).json({
-          status: 400,
-          payment_url: "Duplicated"  
-        });
+    let paymentUrl = null;
+
+    if (acquirer === "Balance") {
+      const user = await User.findByPk(userId);
+      if (!user) return res.status(404).json({ message: "User not found" });
+
+      if (user.balance < programPrice) {
+        return res.status(400).json({ message: "Insufficient balance" });
       }
-    } else {
-      return res.status(400).json({
-        status: 'error',
-        message: 'Failed to create payment transaction',
+
+      user.balance -= programPrice;
+      await user.save();
+
+      const userProgramCount = await UserProgram.count();
+      const userProgramId =
+        "UP" + String(userProgramCount + 1).padStart(5, "0");
+
+      const programProgressCount = await ProgramProgress.count();
+      const programProgressId =
+        "PP" + String(programProgressCount + 1).padStart(5, "0");
+
+      const program = await Program.findByPk(transactionDetails.order_id);
+      if (!program)
+        return res.status(404).json({ message: "Program not found" });
+
+      const meals = await Meal.findAll({
+        where: { program_id: program.id },
+        attributes: ["id"],
+      });
+      const workouts = await Workout.findAll({
+        where: { program_id: program.id },
+        attributes: ["id"],
+      });
+
+      const mealsArray = meals.map((meal) => meal.id);
+      const workoutsArray = workouts.map((workout) => workout.id);
+
+      const progressList = [...mealsArray, ...workoutsArray].join(",");
+      const progressListType = "meal,workout";
+
+      const chatGroupCount = await ChatGroup.count();
+      const chatGroupId = "CG" + String(chatGroupCount + 1).padStart(5, "0");
+
+      const now = new Date();
+      const chatName = `${program.program_name} Group`;
+
+      await ChatGroup.create({
+        id: chatGroupId,
+        chat_name: chatName,
+        createdAt: now,
+        updatedAt: now,
+      });
+
+      await ProgramProgress.create({
+        id: programProgressId,
+        program_id: program.id,
+        progress_index: 0,
+        progress_list: progressList,
+        progress_list_type: progressListType,
+      });
+
+      await UserProgram.create({
+        id: userProgramId,
+        program_id: program.id,
+        username: user.username,
+        expires_in: Date.now() + 30 * 24 * 60 * 60 * 1000,
+        chat_group_id: chatGroupId,
+        program_progress_id: programProgressId,
+      });
+
+      return res.status(200).json({
+        status: 200,
+        payment_url: null,
+        newBalance: user.balance,
       });
     }
+
+    const paymentData = {
+      payment_type: "qris",
+      transaction_details: transactionDetails,
+      qris: { acquirer },
+    };
+
+    const response = await axios.post(
+      process.env.MIDTRANS_API_URL,
+      paymentData,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Basic ${Buffer.from(
+            process.env.MIDTRANS_SERVER_KEY + ":"
+          ).toString("base64")}`,
+        },
+      }
+    );
+
+    if (response.status === 200 && response.data.actions) {
+      paymentUrl = response.data.actions[0].url;
+    }
+
+    return res.status(200).json({ status: 200, payment_url: paymentUrl });
   } catch (error) {
-    console.error('Error during Midtrans payment creation:', error);
-    if (error.response) {
-      return res.status(400).json({
-        status: 'error',
-        message: error.response.data.status_message || 'Unknown error occurred',
-      });
-    } else {
-      return res.status(500).json({
-        status: 'error',
-        message: 'An unknown error occurred during the payment request',
-      });
-    }
+    console.error(error);
+    return res.status(500).json({ status: "error", message: error.message });
   }
-})
+});
