@@ -1103,9 +1103,11 @@ app.post("/api/v1/programs/user", async (req, res) => {
 
 app.put("/api/v1/users/:username/topup/:amount", async (req, res) => {
   const { username } = req.params;
-  let amount = req.params;
+  let amount = 0;
 
   amount = parseInt(req.params.amount, 10);
+
+  console.log(amount);
 
   try {
     const user = await User.findOne({ where: { username } });
